@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d0d0f">
+  <title>Aniverso — Anime</title>
+  <link rel="preconnect" href="https://www.blogger.com">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://streamapi-peach.vercel.app">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <a class="logo" href="/index.html">Ani<span>verso</span></a>
+    <a class="nav-link" href="/generos.html">Gêneros</a>
+    <form class="busca" id="busca-form" action="/busca.html" role="search">
+      <input type="search" id="busca" name="q" placeholder="Buscar anime..." aria-label="Buscar anime">
+    </form>
+  </header>
+
+  <main class="container">
+    <section id="detalhe"></section>
+
+    <section id="episodios-section" class="secao">
+      <h2 class="secao-titulo">Episódios</h2>
+      <div id="eps-list" class="eps-botoes"></div>
+    </section>
+
+    <iframe id="preload-player"
+            style="position:absolute;width:0;height:0;border:0;visibility:hidden"
+            allow="autoplay" aria-hidden="true"></iframe>
+  </main>
+
+  <footer class="footer">
+    <p>Aniverso © 2026 — Não hospedamos nenhum vídeo.</p>
+    <nav class="footer-nav">
+      <a href="/sobre.html">Sobre</a>
+      <a href="/contato.html">Contato</a>
+      <a href="/dmca.html">DMCA</a>
+    </nav>
+  </footer>
+
+  <script src="js/icons.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/anime.js"></script>
+</body>
+</html>

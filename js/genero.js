@@ -1,0 +1,55 @@
+const GENERO_TEXTO_VAZIO = 'Nenhum anime nesse gênero';
+const GENERO_TEXTO_ERRO = 'Não foi possível carregar';
+
+function escapar(valor) {
+  return String(valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function cardHTML(anime) {
+  const capa = anime.capa ? ` src="${escapar(anime.capa)}"` : '';
+  const meta = [`${anime.episodes_count} eps`, anime.ano].filter(Boolean).join(' · ');
+
+  return `<a href="/anime.html?slug=${encodeURIComponent(anime.slug)}" class="card">
+      <img${capa} alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="info">
+        <div class="titulo">${escapar(anime.titulo)}</div>
+        <div class="meta">${escapar(meta)}</div>
+      </div>
+    </a>`;
+}
+
+async function carregarGenero() {
+  const nome = new URLSearchParams(window.location.search).get('nome');
+
+  if (!nome) {
+    window.location = '/generos.html';
+    return;
+  }
+
+  document.getElementById('nome').textContent = nome;
+  document.title = `${nome} — Aniverso`;
+
+  const grid = document.getElementById('grid-genero');
+
+  if (typeof AniversoAPI === 'undefined') {
+    grid.innerHTML = `<p class="vazio">${GENERO_TEXTO_ERRO}</p>`;
+    return;
+  }
+
+  const dados = await AniversoAPI.animes({ genero: nome, per_page: 40 });
+  const animes = dados?.animes ?? [];
+
+  if (!animes.length) {
+    grid.innerHTML = `<p class="vazio">${dados ? GENERO_TEXTO_VAZIO : GENERO_TEXTO_ERRO}</p>`;
+    return;
+  }
+
+  document.getElementById('resumo').textContent = `${dados.total} animes`;
+  grid.innerHTML = animes.map(cardHTML).join('');
+}
+
+document.addEventListener('DOMContentLoaded', carregarGenero);

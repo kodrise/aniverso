@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d0d0f">
+  <title>Aniverso — Busca</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <a class="logo" href="/index.html">Ani<span>verso</span></a>
+    <a class="nav-link" href="/generos.html">Gêneros</a>
+    <form class="busca" id="busca-form" action="/busca.html" role="search">
+      <input type="search" id="busca" name="q" placeholder="Buscar anime..." aria-label="Buscar anime">
+    </form>
+  </header>
+
+  <main class="container">
+    <form class="busca-vazia" id="busca-vazia" action="/busca.html" role="search" hidden>
+      <label for="busca-grande">Digite algo pra buscar</label>
+      <input type="search" id="busca-grande" name="q" placeholder="Buscar anime..." aria-label="Buscar anime">
+    </form>
+
+    <h1 class="page-title" id="titulo-resultados">Resultados para "<span id="termo"></span>"</h1>
+
+    <div class="grid" id="resultados"></div>
+    <p class="vazio" id="vazio" hidden>Nenhum anime encontrado</p>
+  </main>
+
+  <footer class="footer">
+    <p>Aniverso © 2026 — Não hospedamos nenhum vídeo.</p>
+    <nav class="footer-nav">
+      <a href="/sobre.html">Sobre</a>
+      <a href="/contato.html">Contato</a>
+      <a href="/dmca.html">DMCA</a>
+    </nav>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/busca.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d0d0f">
+  <title>Aniverso — Assistir</title>
+  <link rel="preconnect" href="https://www.blogger.com">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://streamapi-peach.vercel.app">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <a class="logo" href="/index.html">Ani<span>verso</span></a>
+    <a class="nav-link" href="/generos.html">Gêneros</a>
+    <form class="busca" id="busca-form" action="/busca.html" role="search">
+      <input type="search" id="busca" name="q" placeholder="Buscar anime..." aria-label="Buscar anime">
+    </form>
+  </header>
+
+  <main class="player-wrap">
+    <div class="player-head">
+      <h1 id="titulo"></h1>
+      <span class="ep" id="ep-label"></span>
+    </div>
+
+    <div class="player-stage">
+      <div id="player-skeleton" class="skeleton"></div>
+      <iframe id="player" allowfullscreen hidden
+              allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+      <div id="player-erro" class="aviso" hidden></div>
+    </div>
+
+    <div class="player-nav">
+      <a id="prev">Anterior</a>
+      <a id="next">Próximo</a>
+    </div>
+
+    <div class="eps-list" id="eps"></div>
+  </main>
+
+  <footer class="footer">
+    <p>Aniverso © 2026 — Não hospedamos nenhum vídeo.</p>
+    <nav class="footer-nav">
+      <a href="/sobre.html">Sobre</a>
+      <a href="/contato.html">Contato</a>
+      <a href="/dmca.html">DMCA</a>
+    </nav>
+  </footer>
+
+  <script src="js/icons.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/watch.js"></script>
+</body>
+</html>

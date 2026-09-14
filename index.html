@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d0d0f">
+  <title>Aniverso — Animes online</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <a class="logo" href="/index.html">Ani<span>verso</span></a>
+    <a class="nav-link" href="/generos.html">Gêneros</a>
+    <form class="busca" id="busca-form" action="/busca.html" role="search">
+      <input type="search" id="busca" name="q" placeholder="Buscar anime..." aria-label="Buscar anime">
+    </form>
+  </header>
+
+  <main class="container">
+    <section class="hero" id="hero"></section>
+
+    <section class="secao">
+      <h2 class="secao-titulo" id="titulo-novos"></h2>
+      <div class="eps-grid" id="eps-novos"></div>
+    </section>
+
+    <section class="secao">
+      <h2 class="secao-titulo">Adicionados recentemente</h2>
+      <div class="grid" id="grid-recentes"></div>
+    </section>
+
+    <section class="secao">
+      <h2 class="secao-titulo">Top notas</h2>
+      <div class="grid" id="grid-top"></div>
+    </section>
+
+    <section class="secao">
+      <h2 class="secao-titulo">Dublados</h2>
+      <div class="grid" id="grid-dub"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Aniverso © 2026 — Não hospedamos nenhum vídeo.</p>
+    <nav class="footer-nav">
+      <a href="/sobre.html">Sobre</a>
+      <a href="/contato.html">Contato</a>
+      <a href="/dmca.html">DMCA</a>
+    </nav>
+  </footer>
+
+  <script src="js/icons.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/home.js"></script>
+</body>
+</html>
