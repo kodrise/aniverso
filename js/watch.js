@@ -2,7 +2,11 @@ const WATCH_ASSISTIDOS_PREFIXO = 'aniverso_assistidos_';
 const WATCH_TEXTO_INDISPONIVEL = 'Episódio não disponível';
 const WATCH_TEXTO_SEM_EPS = 'Nenhum episódio disponível';
 const WATCH_STATUS = ['alive', 'dead', 'unknown'];
-const WATCH_SKELETON_MAX = 6000;
+const WATCH_LOADING_MAX = 15000;
+const WATCH_TEXTO_LENTO = 'Vídeo demorou pra carregar';
+const WATCH_CLIQUE_CHAVE = 'aniverso_clique_assistir';
+
+let inicioDoClique = 0;
 
 function escapar(valor) {
   return String(valor)
@@ -35,16 +39,54 @@ function marcarAssistido(slug, numero) {
   }
 }
 
-function esconderSkeleton() {
-  const esqueleto = document.getElementById('player-skeleton');
-  if (esqueleto) esqueleto.hidden = true;
+function marcarInicioDoPlayer() {
+  let clique = 0;
+
+  try {
+    clique = Number(sessionStorage.getItem(WATCH_CLIQUE_CHAVE)) || 0;
+    sessionStorage.removeItem(WATCH_CLIQUE_CHAVE);
+  } catch (erro) {
+    clique = 0;
+  }
+
+  inicioDoClique = clique || Date.now();
+
+  const desde = inicioDoClique - performance.timeOrigin;
+  if (desde > 0) performance.mark('player-inicio', { startTime: desde });
+  else performance.mark('player-inicio');
+}
+
+function marcarPlayerPronto() {
+  performance.mark('player-pronto');
+  performance.measure('clique-ate-video', 'player-inicio', 'player-pronto');
+
+  const medida = performance.getEntriesByName('clique-ate-video')[0];
+  const total = inicioDoClique ? Date.now() - inicioDoClique : medida.duration;
+
+  console.log(`[player] clique→vídeo: ${total.toFixed(0)}ms`);
+}
+
+function esconderCarregando() {
+  const carregando = document.getElementById('player-loading');
+  if (carregando) carregando.hidden = true;
 }
 
 function mostrarPlayer(url) {
   const player = document.getElementById('player');
+  const carregando = document.getElementById('player-loading');
+  let carregou = false;
 
-  player.addEventListener('load', esconderSkeleton, { once: true });
-  setTimeout(esconderSkeleton, WATCH_SKELETON_MAX);
+  carregando.hidden = false;
+
+  player.addEventListener('load', () => {
+    carregou = true;
+    esconderCarregando();
+    marcarPlayerPronto();
+  }, { once: true });
+
+  setTimeout(() => {
+    if (!carregou) mostrarErro(WATCH_TEXTO_LENTO);
+  }, WATCH_LOADING_MAX);
 
   player.src = url;
   player.hidden = false;
@@ -54,7 +96,7 @@ function mostrarErro(texto) {
   const player = document.getElementById('player');
   const erro = document.getElementById('player-erro');
 
-  esconderSkeleton();
+  esconderCarregando();
   player.hidden = true;
   player.removeAttribute('src');
   erro.textContent = texto;
@@ -106,6 +148,8 @@ function ligarNavegacao(anime, episodios, atual) {
 }
 
 async function carregarWatch() {
+  marcarInicioDoPlayer();
+
   const parametros = new URLSearchParams(window.location.search);
   const slug = parametros.get('slug');
 

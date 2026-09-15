@@ -5,37 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d0d0f">
   <title>Aniverso — Animes online</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://streamapi-peach.vercel.app">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
   <header class="header">
     <a class="logo" href="/index.html">Ani<span>verso</span></a>
-    <a class="nav-link" href="/generos.html">Gêneros</a>
-    <form class="busca" id="busca-form" action="/busca.html" role="search">
-      <input type="search" id="busca" name="q" placeholder="Buscar anime..." aria-label="Buscar anime">
-    </form>
+    <div class="busca-wrap">
+      <form class="busca" id="busca-form" action="/busca.html" role="search">
+        <svg class="busca-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="search" id="busca" name="q" placeholder="Buscar anime..." autocomplete="off" aria-label="Buscar anime">
+      </form>
+      <div class="busca-drop" id="busca-drop" hidden></div>
+    </div>
   </header>
 
   <main class="container">
     <section class="hero" id="hero"></section>
 
-    <section class="secao">
-      <h2 class="secao-titulo" id="titulo-novos"></h2>
-      <div class="eps-grid" id="eps-novos"></div>
+    <section class="secao secao-rail">
+      <header class="secao-head">
+        <div class="secao-head-esquerda">
+          <h2 class="secao-titulo">
+            <svg class="ico" viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+              <path d="M13.5 0.67s0.74 2.65 0.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l0.03-0.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5 0.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-0.36 3.6-1.21 4.62-2.58 0.39 1.29 0.59 2.65 0.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/>
+            </svg>
+            Novos Episódios
+          </h2>
+        </div>
+      </header>
+      <button class="rail-nav rail-nav-prev" type="button" aria-label="Anterior">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="eps-rail" id="eps-novos"></div>
+      <button class="rail-nav rail-nav-next" type="button" aria-label="Próximo">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
     </section>
 
     <section class="secao">
-      <h2 class="secao-titulo">Adicionados recentemente</h2>
+      <header class="secao-head">
+        <div class="secao-head-esquerda">
+          <h2 class="secao-titulo">Adicionados recentemente</h2>
+        </div>
+        <a class="secao-link" href="/catalogo.html">Ver todos →</a>
+      </header>
       <div class="grid" id="grid-recentes"></div>
     </section>
 
     <section class="secao">
-      <h2 class="secao-titulo">Top notas</h2>
+      <header class="secao-head">
+        <div class="secao-head-esquerda">
+          <h2 class="secao-titulo">Top notas</h2>
+        </div>
+        <a class="secao-link" href="/catalogo.html?ordem=nota">Ver todos →</a>
+      </header>
       <div class="grid" id="grid-top"></div>
     </section>
 
     <section class="secao">
-      <h2 class="secao-titulo">Dublados</h2>
+      <header class="secao-head">
+        <div class="secao-head-esquerda">
+          <h2 class="secao-titulo">Dublados</h2>
+        </div>
+        <a class="secao-link" href="/catalogo.html?audio=dublado">Ver todos →</a>
+      </header>
       <div class="grid" id="grid-dub"></div>
     </section>
   </main>
@@ -51,6 +88,7 @@
 
   <script src="js/icons.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/busca-live.js"></script>
   <script src="js/home.js"></script>
 </body>
 </html>

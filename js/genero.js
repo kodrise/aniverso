@@ -11,7 +11,14 @@ function escapar(valor) {
 
 function cardHTML(anime) {
   const capa = anime.capa ? ` src="${escapar(anime.capa)}"` : '';
-  const meta = [`${anime.episodes_count} eps`, anime.ano].filter(Boolean).join(' · ');
+  const partes = [];
+
+  if (anime.episodes_count === 1) partes.push('1 episódio');
+  else if (anime.episodes_count > 1) partes.push(`${anime.episodes_count} episódios`);
+
+  if (anime.ano) partes.push(anime.ano);
+
+  const meta = partes.join(' · ');
 
   return `<a href="/anime.html?slug=${encodeURIComponent(anime.slug)}" class="card">
       <img${capa} alt="" loading="lazy" onerror="this.style.visibility='hidden'">
@@ -26,7 +33,7 @@ async function carregarGenero() {
   const nome = new URLSearchParams(window.location.search).get('nome');
 
   if (!nome) {
-    window.location = '/generos.html';
+    window.location = '/catalogo.html';
     return;
   }
 

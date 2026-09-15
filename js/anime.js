@@ -1,4 +1,5 @@
 const ANIME_ASSISTIDOS_PREFIXO = 'aniverso_assistidos_';
+const ANIME_CLIQUE_CHAVE = 'aniverso_clique_assistir';
 const ANIME_TEXTO_ERRO = 'Anime não encontrado';
 const ANIME_STATUS = ['alive', 'dead', 'unknown'];
 
@@ -71,7 +72,7 @@ function epBotao(anime, episodio, vistos) {
     return `<span class="${classes}" title="Episódio indisponível">${rotulo}</span>`;
   }
 
-  return `<a class="${classes}" href="${hrefWatch(anime.slug, episodio.numero)}">${rotulo}</a>`;
+  return `<a class="${classes}" data-ep="${escapar(episodio.numero)}" href="${hrefWatch(anime.slug, episodio.numero)}">${rotulo}</a>`;
 }
 
 function renderEpisodios(anime) {
@@ -87,20 +88,51 @@ function renderEpisodios(anime) {
   lista.innerHTML = episodios.map((episodio) => epBotao(anime, episodio, vistos)).join('');
 }
 
+async function preaquecerEpisodio(slug, numero) {
+  const embed = await AniversoAPI.embed(slug, numero);
+  const alvo = document.getElementById('preload-player');
+
+  if (alvo && embed?.embed_url && alvo.getAttribute('src') !== embed.embed_url) {
+    alvo.src = embed.embed_url;
+  }
+
+  return embed;
+}
+
 async function preaquecerPlayer(anime) {
+  const primeiro = (anime.episodios || []).find((episodio) => episodio.status !== 'dead')?.numero;
+  if (!primeiro) return;
+
   try {
-    const alvo = document.getElementById('preload-player');
-    if (!alvo || alvo.getAttribute('src')) return;
-
-    const primeiro = (anime.episodios || []).find((episodio) => episodio.status !== 'dead')?.numero;
-    if (!primeiro) return;
-
-    const embed = await AniversoAPI.embed(anime.slug, primeiro);
-    if (embed?.embed_url) alvo.src = embed.embed_url;
+    AniversoAPI.lite(anime.slug);
+    await preaquecerEpisodio(anime.slug, primeiro);
   } catch (erro) {
     console.error('[Aniverso] falha ao pré-aquecer o player', erro);
   }
 }
+
+function preaquecerNoHover(slug) {
+  document.querySelectorAll('.ep-btn:not(.dead)').forEach((btn) => {
+    const aquecer = () => {
+      const numero = btn.dataset.ep;
+      if (numero) preaquecerEpisodio(slug, numero).catch(() => {});
+    };
+
+    btn.addEventListener('mouseenter', aquecer, { once: true });
+    btn.addEventListener('focus', aquecer, { once: true });
+  });
+}
+
+document.addEventListener('click', (evento) => {
+  const link = evento.target instanceof Element && evento.target.closest('a[href^="/watch.html"]');
+  if (!link) return;
+
+  try {
+    sessionStorage.setItem(ANIME_CLIQUE_CHAVE, String(Date.now()));
+  } catch (erro) {
+    console.error('[Aniverso] não consegui guardar o instante do clique', erro);
+  }
+}, true);
 
 async function carregarAnime() {
   const slug = new URLSearchParams(window.location.search).get('slug');
@@ -128,6 +160,7 @@ async function carregarAnime() {
   renderEpisodios(anime);
 
   preaquecerPlayer(anime);
+  preaquecerNoHover(anime.slug);
 }
 
 document.addEventListener('DOMContentLoaded', carregarAnime);

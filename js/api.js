@@ -118,8 +118,8 @@ const AniversoAPI = (() => {
 
     /**
      * Versão leve do anime: titulo + episodios[{numero, status}], sem sources.
-     * Enquanto `/api/animes/{slug}/lite` não existir (hoje responde 404), cai
-     * para o detalhe completo — o 404 não é retentado pra não custar 500ms.
+     * Se `/api/animes/{slug}/lite` falhar, cai para o detalhe completo — a falha
+     * não é retentada pra não custar 500ms.
      * @param {string} slug
      * @returns {Promise<{id: number, slug: string, titulo: string, episodios: {numero: number, status: string}[]}|null>}
      */

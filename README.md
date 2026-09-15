@@ -16,7 +16,7 @@ Abre em `http://localhost:8090`. Não tem build, npm nem dependência: é só se
 vercel --prod
 ```
 
-O `vercel.json` liga `cleanUrls`, então `/anime` serve `anime.html` (o `.html` sai da URL). Não há rewrite para o `index.html`: é site multipágina, cada `.html` é acessado direto.
+O `vercel.json` só define `trailingSlash: false` e o cache de `/css` e `/js` (`max-age=0, must-revalidate`). Não há `cleanUrls` nem rewrite, então o `.html` fica na URL: é site multipágina, cada página é acessada direto em `/anime.html`, `/busca.html` etc.
 
 ## API
 
@@ -40,7 +40,7 @@ aniverso/
 ├── anime.html      detalhe do anime: capa, sinopse, gêneros, lista de episódios
 ├── watch.html      player: iframe do player + navegação entre episódios
 ├── busca.html      resultados da busca (?q=)
-├── generos.html    lista de gêneros
+├── catalogo.html   catálogo com filtros (?genero, ?ano, ?tipo, ?audio, ?ordem, ?page)
 ├── genero.html     animes de um gênero (?nome=)
 ├── 404.html        página não encontrada
 ├── sobre.html      sobre
@@ -51,12 +51,14 @@ aniverso/
 ├── js/
 │   ├── icons.js    ícones SVG inline (objeto Icon)
 │   ├── api.js      cliente da API (const API)
+│   ├── busca-live.js  dropdown de busca ao vivo (header)
 │   ├── home.js     home (cache de 5min em sessionStorage)
 │   ├── anime.js    detalhe do anime
 │   ├── watch.js    player
 │   ├── busca.js    busca
+│   ├── catalogo.js catálogo (filtros, paginação e chip de ordem)
 │   └── genero.js   gênero
-├── vercel.json     cleanUrls + cache de /css e /js
+├── vercel.json     trailingSlash: false + cache de /css e /js
 └── README.md
 ```
 

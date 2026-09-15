@@ -5,15 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d0d0f">
   <title>Aniverso — Busca</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
   <header class="header">
     <a class="logo" href="/index.html">Ani<span>verso</span></a>
-    <a class="nav-link" href="/generos.html">Gêneros</a>
-    <form class="busca" id="busca-form" action="/busca.html" role="search">
-      <input type="search" id="busca" name="q" placeholder="Buscar anime..." aria-label="Buscar anime">
-    </form>
+    <div class="busca-wrap">
+      <form class="busca" id="busca-form" action="/busca.html" role="search">
+        <svg class="busca-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="search" id="busca" name="q" placeholder="Buscar anime..." autocomplete="off" aria-label="Buscar anime">
+      </form>
+      <div class="busca-drop" id="busca-drop" hidden></div>
+    </div>
   </header>
 
   <main class="container">
@@ -38,6 +41,7 @@
   </footer>
 
   <script src="js/api.js"></script>
+  <script src="js/busca-live.js"></script>
   <script src="js/busca.js"></script>
 </body>
 </html>

@@ -8,6 +8,7 @@ const HOME_HERO_INTERVALO = 7000;
 const HOME_HERO_PAUSA = 30000;
 const HOME_HERO_FADE = 250;
 const HOME_SWIPE_MIN = 50;
+const HOME_RAIL_PASSO = 320;
 
 let heroAnimes = [];
 let heroIndice = 0;
@@ -15,6 +16,10 @@ let heroTimer = null;
 let heroPausaTimer = null;
 let heroToqueX = null;
 let heroSwipeLigado = false;
+let heroProgressoRaf = null;
+let heroProgressoInicio = 0;
+let heroEmHover = false;
+let heroInteracaoLigada = false;
 
 function escapar(valor) {
   return String(valor)
@@ -111,7 +116,14 @@ function tempoRelativo(iso) {
 
 function cardHTML(anime) {
   const capa = anime.capa ? ` src="${escapar(anime.capa)}"` : '';
-  const meta = [`${anime.episodes_count} eps`, anime.ano].filter(Boolean).join(' · ');
+  const partes = [];
+
+  if (anime.episodes_count === 1) partes.push('1 episódio');
+  else if (anime.episodes_count > 1) partes.push(`${anime.episodes_count} episódios`);
+
+  if (anime.ano) partes.push(anime.ano);
+
+  const meta = partes.join(' · ');
 
   return `<a href="/anime.html?slug=${encodeURIComponent(anime.slug)}" class="card">
       <img${capa} alt="" loading="lazy" onerror="this.style.visibility='hidden'">
@@ -128,19 +140,46 @@ function epCardHTML(card) {
     : '';
   const capa = card.capa ? ` src="${escapar(card.capa)}"` : '';
 
-  return `<a class="ep-card" href="/watch.html?slug=${encodeURIComponent(card.slug)}&ep=${encodeURIComponent(card.numero)}">
+  return `<a class="ep-card" href="/watch.html?slug=${encodeURIComponent(card.slug)}&ep=${encodeURIComponent(card.numero)}"
+      data-slug="${escapar(card.slug)}" data-ep="${escapar(card.numero)}">
       <div class="ep-card-thumb">
         <img${capa} alt="" loading="lazy">
         ${badge}
+        <span class="ep-card-num">Episódio ${escapar(card.numero)}</span>
       </div>
       <div class="ep-card-body">
         <div class="ep-card-titulo">${escapar(card.titulo)}</div>
         <div class="ep-card-foot">
-          <span class="ep-num">Ep ${escapar(card.numero)}</span>
           <span class="ep-time">${tempoRelativo(card.scraped_at)}</span>
         </div>
       </div>
     </a>`;
+}
+
+function preaquecerEps() {
+  if (typeof AniversoAPI === 'undefined') return;
+
+  for (const card of document.querySelectorAll('.ep-card[data-slug]')) {
+    const aquecer = () => {
+      const { slug, ep } = card.dataset;
+
+      AniversoAPI.lite(slug).catch(() => {});
+      if (ep) AniversoAPI.embed(slug, ep).catch(() => {});
+    };
+
+    card.addEventListener('mouseenter', aquecer, { once: true });
+    card.addEventListener('focus', aquecer, { once: true });
+  }
+}
+
+function ligarRailNav() {
+  const rail = document.getElementById('eps-novos');
+  if (!rail) return;
+
+  const rolar = (passo) => rail.scrollBy({ left: passo, behavior: 'smooth' });
+
+  document.querySelector('.rail-nav-prev')?.addEventListener('click', () => rolar(-HOME_RAIL_PASSO));
+  document.querySelector('.rail-nav-next')?.addEventListener('click', () => rolar(HOME_RAIL_PASSO));
 }
 
 function heroHTML(anime) {
@@ -152,6 +191,7 @@ function heroHTML(anime) {
     : '';
 
   return `<div class="hero-bg"${fundo}></div>
+      <div class="hero-scrim"></div>
       <div class="hero-content">
         <img class="hero-capa"${capa} alt="">
         <div class="hero-info">
@@ -181,6 +221,65 @@ function ligarDotsHero(hero) {
   }
 }
 
+function pararProgressoHero() {
+  if (heroProgressoRaf) cancelAnimationFrame(heroProgressoRaf);
+  heroProgressoRaf = null;
+}
+
+function animarProgressoHero() {
+  pararProgressoHero();
+  heroProgressoInicio = performance.now();
+
+  const passo = () => {
+    const hero = document.getElementById('hero');
+    const ativo = hero?.querySelector('.hero-dots span.active');
+
+    if (!ativo || heroAnimes.length < 2) {
+      pararProgressoHero();
+      return;
+    }
+
+    const decorrido = performance.now() - heroProgressoInicio;
+    const fracao = Math.min(decorrido / HOME_HERO_INTERVALO, 1);
+    ativo.style.setProperty('--progresso', fracao.toFixed(4));
+
+    if (fracao < 1 && heroTimer) {
+      heroProgressoRaf = requestAnimationFrame(passo);
+    }
+  };
+
+  heroProgressoRaf = requestAnimationFrame(passo);
+}
+
+function ligarInteracaoHero(hero) {
+  if (heroInteracaoLigada) return;
+  heroInteracaoLigada = true;
+
+  hero.addEventListener('mouseenter', () => {
+    heroEmHover = true;
+    pararProgressoHero();
+    clearInterval(heroTimer);
+    heroTimer = null;
+    clearTimeout(heroPausaTimer);
+    heroPausaTimer = null;
+  });
+
+  hero.addEventListener('mouseleave', () => {
+    heroEmHover = false;
+    reiniciarHeroTimer();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      pararProgressoHero();
+      clearInterval(heroTimer);
+      heroTimer = null;
+    } else if (!heroEmHover) {
+      reiniciarHeroTimer();
+    }
+  });
+}
+
 function ligarSwipeHero(hero) {
   if (heroSwipeLigado) return;
   heroSwipeLigado = true;
@@ -198,7 +297,7 @@ function ligarSwipeHero(hero) {
     if (Math.abs(delta) < HOME_SWIPE_MIN) return;
 
     irParaHero(delta < 0 ? heroIndice + 1 : heroIndice - 1);
-    reiniciarHeroTimer();
+    pausarHero();
   }, { passive: true });
 }
 
@@ -211,6 +310,11 @@ function renderHero(indice) {
 
   ligarDotsHero(hero);
   ligarSwipeHero(hero);
+  ligarInteracaoHero(hero);
+
+  if (heroTimer && !heroEmHover && !document.hidden) {
+    animarProgressoHero();
+  }
 }
 
 function irParaHero(indice) {
@@ -234,15 +338,21 @@ function reiniciarHeroTimer() {
   clearTimeout(heroPausaTimer);
   heroPausaTimer = null;
 
-  if (heroAnimes.length < 2) return;
+  if (heroAnimes.length < 2 || heroEmHover || document.hidden) return;
 
   heroTimer = setInterval(() => irParaHero(heroIndice + 1), HOME_HERO_INTERVALO);
+  animarProgressoHero();
 }
 
 function pausarHero() {
   clearInterval(heroTimer);
   heroTimer = null;
   clearTimeout(heroPausaTimer);
+  pararProgressoHero();
+
+  const hero = document.getElementById('hero');
+  const ativo = hero?.querySelector('.hero-dots span.active');
+  if (ativo) ativo.style.setProperty('--progresso', '0');
 
   heroPausaTimer = setTimeout(() => {
     heroPausaTimer = null;
@@ -288,14 +398,12 @@ async function carregarNovosEpisodios() {
   const alvo = document.getElementById('eps-novos');
 
   try {
-    document.getElementById('titulo-novos').innerHTML = `${icone('fire')} Novos Episódios`;
-
     if (typeof AniversoAPI === 'undefined') {
       vazio(alvo, HOME_TEXTO_ERRO);
       return;
     }
 
-    const cards = await comCache('novos-episodios', async () => {
+    const eps = await comCache('novos-episodios', async () => {
       const dados = await AniversoAPI.animes({ ano_min: 2024, ordem: 'ano', desc: true, per_page: 20 });
       if (!dados) return null;
 
@@ -314,17 +422,18 @@ async function carregarNovosEpisodios() {
         }));
     });
 
-    if (cards === null) {
+    if (eps === null) {
       vazio(alvo, HOME_TEXTO_ERRO);
       return;
     }
 
-    if (!cards.length) {
+    if (!eps.length) {
       vazio(alvo, HOME_TEXTO_VAZIO);
       return;
     }
 
-    alvo.innerHTML = cards.map(epCardHTML).join('');
+    alvo.innerHTML = eps.map(epCardHTML).join('');
+    preaquecerEps();
   } catch (erro) {
     console.error('[Aniverso] falha ao carregar os novos episódios', erro);
     vazio(alvo, HOME_TEXTO_ERRO);
@@ -340,24 +449,24 @@ async function carregarGrid(elementoId, chave, params, limite) {
       return;
     }
 
-    const cards = await comCache(chave, async () => {
+    const lista = await comCache(chave, async () => {
       const dados = await AniversoAPI.animes(params);
       if (!dados) return null;
 
       return aproveitaveis(dados).slice(0, limite).map(reduzirCard);
     });
 
-    if (cards === null) {
+    if (lista === null) {
       vazio(alvo, HOME_TEXTO_ERRO);
       return;
     }
 
-    if (!cards.length) {
+    if (!lista.length) {
       vazio(alvo, HOME_TEXTO_VAZIO);
       return;
     }
 
-    alvo.innerHTML = cards.map(cardHTML).join('');
+    alvo.innerHTML = lista.map(cardHTML).join('');
   } catch (erro) {
     console.error(`[Aniverso] falha ao carregar a seção ${elementoId}`, erro);
     vazio(alvo, HOME_TEXTO_ERRO);
@@ -399,5 +508,6 @@ function ligarBusca() {
 
 document.addEventListener('DOMContentLoaded', () => {
   ligarBusca();
+  ligarRailNav();
   carregarHome();
 });

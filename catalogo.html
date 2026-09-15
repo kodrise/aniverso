@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d0d0f">
-  <title>Aniverso — Gênero</title>
+  <title>Catálogo — Aniverso</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://streamapi-peach.vercel.app">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
@@ -20,9 +24,17 @@
   </header>
 
   <main class="container">
-    <h1 class="page-title" id="nome"></h1>
-    <p class="page-sub" id="resumo"></p>
-    <div class="grid" id="grid-genero"></div>
+    <h1 class="page-title">Catálogo</h1>
+
+    <div class="filtros">
+      <select id="f-genero" aria-label="Gênero"><option value="">Todos os gêneros</option></select>
+      <select id="f-ano" aria-label="Ano"><option value="">Todos os anos</option></select>
+      <select id="f-tipo" aria-label="Tipo"><option value="">Todos os tipos</option></select>
+      <select id="f-audio" aria-label="Áudio"><option value="">Dublado e legendado</option></select>
+    </div>
+
+    <div class="grid" id="grid-animes"></div>
+    <div class="paginacao" id="paginacao"></div>
   </main>
 
   <footer class="footer">
@@ -36,6 +48,6 @@
 
   <script src="js/api.js"></script>
   <script src="js/busca-live.js"></script>
-  <script src="js/genero.js"></script>
+  <script src="js/catalogo.js"></script>
 </body>
 </html>
