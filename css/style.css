@@ -773,11 +773,16 @@ svg.ico[stroke] {
   font-size: 14px;
   font-weight: 700;
   background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--muted);
 }
-.ep-lista.atual .ep-lista-num { background: rgba(221, 51, 51, 0.92); color: #fff; }
-.ep-lista.watched .ep-lista-num { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+/* .atual não pinta a pill: verde quando assistido, cinza caso contrário */
+.ep-lista.watched .ep-lista-num {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.35);
+  color: #4ade80;
+}
 
 .ep-lista-thumb {
   flex-shrink: 0;
@@ -898,6 +903,12 @@ svg.ico[stroke] {
 .eps-filtro input::placeholder { color: var(--muted); }
 .eps-filtro input:focus { outline: none; border-color: var(--accent); }
 .eps-filtro #eps-ver-mais { margin-left: auto; }
+.eps-filtro .eps-contagem {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
 
 .botao {
   display: inline-block;
@@ -1003,13 +1014,18 @@ svg.ico[stroke] {
   min-width: 0;
 }
 
+/* busca + contagem só na lista vertical do desktop */
+.watch-side .eps-filtro {
+  display: none;
+}
+
 .watch-side .watch-eps-lista {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
   min-height: 240px;
-  max-height: 60vh;
+  max-height: calc(100vh - 200px);
   padding-right: 6px;
   padding-bottom: 0;
   scroll-snap-type: none;
@@ -1028,6 +1044,17 @@ svg.ico[stroke] {
   padding: 8px 10px;
 }
 
+/* pill do número idêntica à da página de detalhe — mesmas regras partilhadas */
+.watch-side .ep-lista-titulo {
+  font-size: 13.5px;
+}
+
+@media (min-width: 1025px) {
+  .watch-side .eps-filtro {
+    display: flex;
+  }
+}
+
 @media (max-width: 1024px) {
   .watch-layout {
     grid-template-columns: minmax(0, 1fr);
@@ -1040,29 +1067,18 @@ svg.ico[stroke] {
     max-height: none;
     scroll-snap-type: x mandatory;
   }
+  /* rail horizontal mantém o mesmo flex row da página de detalhe: pill | thumb | título | visto */
   .watch-side .ep-lista {
-    flex: 0 0 200px;
-    display: block;
-    position: relative;
-  }
-  .watch-side .ep-lista-num {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 2;
-    width: auto;
-    height: auto;
-    padding: 3px 8px;
-    font-size: 11px;
-    border-radius: 4px;
-    background: rgba(0, 0, 0, 0.75);
-    color: #fff;
+    flex: 0 0 220px;
+    gap: 8px;
+    padding: 8px 10px;
+    scroll-snap-align: start;
   }
   .watch-side .ep-lista-thumb {
-    width: 100%;
+    width: 64px;
   }
   .watch-side .ep-lista-body {
-    padding: 10px 12px 12px;
+    padding: 0;
   }
 }
 

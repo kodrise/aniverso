@@ -143,7 +143,7 @@ function cardHTML(anime) {
 
   const meta = partes.join(' · ');
 
-  return `<a href="/anime.html?slug=${encodeURIComponent(anime.slug)}" class="card">
+  return `<a href="/anime?slug=${encodeURIComponent(anime.slug)}" class="card">
       <div class="card-thumb">
         <img${capa} alt="" loading="lazy" onerror="this.style.visibility='hidden'">
         ${audio ? `<span class="card-badge ${audio.classe}">${audio.label}</span>` : ''}
@@ -161,7 +161,7 @@ function epCardHTML(card) {
   const thumbSrc = card.thumb || card.capa;
   const img = thumbSrc ? `<img src="${escapar(thumbSrc)}" alt="" loading="lazy" decoding="async">` : '';
 
-  return `<a class="ep-card" href="/watch.html?slug=${encodeURIComponent(card.slug)}&ep=${encodeURIComponent(card.numero)}"
+  return `<a class="ep-card" href="/watch?slug=${encodeURIComponent(card.slug)}&ep=${encodeURIComponent(card.numero)}"
       data-slug="${escapar(card.slug)}" data-ep="${escapar(card.numero)}">
       <div class="ep-card-thumb">
         ${img}
@@ -228,7 +228,7 @@ function slideHTML(anime, indice) {
           <div class="hero-pills">
             ${anime.generos.map((genero) => `<span>${escapar(genero)}</span>`).join('')}
           </div>
-          <a class="hero-cta" href="/anime.html?slug=${encodeURIComponent(anime.slug)}">${icone('play')} Assistir Agora</a>
+          <a class="hero-cta" href="/anime?slug=${encodeURIComponent(anime.slug)}">${icone('play')} Assistir Agora</a>
         </div>
       </div>
     </div>`;
@@ -571,7 +571,7 @@ function ligarBusca() {
     const valor = campo.value.trim();
     if (!valor) return;
 
-    window.location = `/busca.html?q=${encodeURIComponent(valor)}`;
+    window.location = `/busca?q=${encodeURIComponent(valor)}`;
   });
 }
 

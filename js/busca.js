@@ -22,7 +22,7 @@ function cardHTML(anime) {
 
   const meta = partes.join(' · ');
 
-  return `<a href="/anime.html?slug=${encodeURIComponent(anime.slug)}" class="card">
+  return `<a href="/anime?slug=${encodeURIComponent(anime.slug)}" class="card">
       <img${capa} alt="" loading="lazy" onerror="this.style.visibility='hidden'">
       <div class="info">
         <div class="titulo">${escapar(anime.titulo)}</div>

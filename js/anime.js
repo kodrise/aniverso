@@ -21,12 +21,12 @@ function assistidos(slug) {
 }
 
 function hrefWatch(slug, numero) {
-  return `/watch.html?slug=${encodeURIComponent(slug)}&ep=${encodeURIComponent(numero)}`;
+  return `/watch?slug=${encodeURIComponent(slug)}&ep=${encodeURIComponent(numero)}`;
 }
 
 function generosPills(generos) {
   return (generos ?? [])
-    .map((genero) => `<a href="/genero.html?nome=${encodeURIComponent(genero)}">${escapar(genero)}</a>`)
+    .map((genero) => `<a href="/genero?nome=${encodeURIComponent(genero)}">${escapar(genero)}</a>`)
     .join('');
 }
 
@@ -225,7 +225,7 @@ function preaquecerNoHover(slug) {
 }
 
 document.addEventListener('click', (evento) => {
-  const link = evento.target instanceof Element && evento.target.closest('a[href^="/watch.html"]');
+  const link = evento.target instanceof Element && evento.target.closest('a[href^="/watch"]');
   if (!link) return;
 
   try {
@@ -239,7 +239,7 @@ async function carregarAnime() {
   const slug = new URLSearchParams(window.location.search).get('slug');
 
   if (!slug) {
-    window.location = '/404.html';
+    window.location = '/404';
     return;
   }
 

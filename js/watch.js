@@ -13,6 +13,7 @@ let episodiosVivos = [];
 let indiceAtual = -1;
 let embedUrlAtual = '';
 let controlsTimeout = null;
+let filtroEps = '';
 
 function escapar(valor) {
   return String(valor)
@@ -23,7 +24,7 @@ function escapar(valor) {
 }
 
 function hrefWatch(slug, numero) {
-  return `/watch.html?slug=${encodeURIComponent(slug)}&ep=${encodeURIComponent(numero)}`;
+  return `/watch?slug=${encodeURIComponent(slug)}&ep=${encodeURIComponent(numero)}`;
 }
 
 function vistos(slug) {
@@ -146,7 +147,7 @@ function pintarCabecalho() {
     sub.classList.remove('ep-nome');
   }
 
-  document.getElementById('voltar').href = `/anime.html?slug=${encodeURIComponent(animeAtual.slug)}`;
+  document.getElementById('voltar').href = `/anime?slug=${encodeURIComponent(animeAtual.slug)}`;
 }
 
 function preencherMeta(anime) {
@@ -238,9 +239,40 @@ function epCardHTML(anime, ep, idx) {
 function renderEpisodios() {
   const container = document.getElementById('eps');
   if (!container) return;
-  container.innerHTML = episodiosVivos.map((ep, i) => epCardHTML(animeAtual, ep, i)).join('');
+
+  // mantém o índice original mesmo filtrando, pra não perder o .atual
+  const comIndice = episodiosVivos.map((ep, i) => ({ ep, i }));
+  const visiveis = filtroEps
+    ? comIndice.filter(({ ep }) => String(ep.numero).includes(filtroEps))
+    : comIndice;
+
+  container.innerHTML = visiveis.length
+    ? visiveis.map(({ ep, i }) => epCardHTML(animeAtual, ep, i)).join('')
+    : '<p class="vazio">Nenhum episódio encontrado</p>';
+
+  const contagem = document.getElementById('eps-contagem');
+  if (contagem) {
+    const total = episodiosVivos.length;
+    contagem.textContent = `${total} ${total === 1 ? 'episódio' : 'episódios'}`;
+  }
+
   const atual = container.querySelector('.ep-lista.atual');
   if (atual) atual.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+
+function setupBuscaEps() {
+  const busca = document.getElementById('eps-busca');
+  if (!busca) return;
+
+  let debounce = null;
+  busca.addEventListener('input', (e) => {
+    if (window.innerWidth <= 1024) return; // busca só na lista vertical do desktop
+    clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      filtroEps = e.target.value.trim();
+      renderEpisodios();
+    }, 150);
+  });
 }
 
 function ligarNavegacao() {
@@ -525,7 +557,7 @@ async function carregarWatch() {
   const pedido = params.has('ep') ? Number(params.get('ep')) : null;
 
   if (!slug) {
-    window.location = '/404.html';
+    window.location = '/404';
     return;
   }
 
@@ -538,7 +570,7 @@ async function carregarWatch() {
 
   const anime = await AniversoAPI.lite(slug);
   if (!anime) {
-    window.location = '/404.html';
+    window.location = '/404';
     return;
   }
 
@@ -563,6 +595,7 @@ async function carregarWatch() {
 
   pintarCabecalho();
   renderEpisodios();
+  setupBuscaEps();
   ligarNavegacao();
   ligarBotoesNavegacao();
   preloadHover();

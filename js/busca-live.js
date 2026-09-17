@@ -27,7 +27,7 @@
     }
 
     drop.innerHTML = lista.slice(0, 8).map((a, i) => `
-      <a class="busca-item" data-i="${i}" href="/anime.html?slug=${encodeURIComponent(a.slug)}">
+      <a class="busca-item" data-i="${i}" href="/anime?slug=${encodeURIComponent(a.slug)}">
         <img src="${esc(a.capa || '')}" alt="" loading="lazy">
         <div class="busca-item-info">
           <div class="busca-item-titulo">${esc(a.titulo)}</div>
