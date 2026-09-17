@@ -54,10 +54,14 @@ function metaHTML(anime) {
 
 function renderDetalhe(anime) {
   const capa = document.getElementById('capa');
+  const hero = document.querySelector('.anime-hero');
+
+  capa.classList.remove('sk');
 
   if (anime.capa) {
     capa.src = anime.capa;
     capa.onerror = () => { capa.style.visibility = 'hidden'; };
+    hero?.style.setProperty('--hero-capa', `url("${anime.capa}")`);
   }
 
   document.getElementById('titulo').textContent = anime.titulo;
@@ -248,6 +252,7 @@ async function carregarAnime() {
     return;
   }
 
+  Skeleton.setAnimeHero();
   Skeleton.setEpGrid('eps', 6);
 
   const anime = await AniversoAPI.anime(slug);

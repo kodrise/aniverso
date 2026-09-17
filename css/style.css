@@ -625,22 +625,55 @@ svg.ico[stroke] {
 }
 
 .anime-hero {
+  position: relative;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 220px 1fr;
   gap: 32px;
-  margin-bottom: 32px;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 24px;
+  min-height: 440px;
+  padding: 24px 32px;
+  margin-bottom: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.anime-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--hero-capa, none);
+  background-size: cover;
+  background-position: center;
+  filter: blur(48px) brightness(0.35) saturate(1.2);
+  transform: scale(1.15);
+  z-index: 0;
+}
+
+.anime-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(13, 13, 15, 0.7) 60%, var(--bg) 100%);
+  z-index: 1;
+}
+
+.anime-info {
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.65);
 }
 
 .anime-capa {
-  width: 100%;
+  position: relative;
+  z-index: 3;
+  width: 180px;
   aspect-ratio: 2 / 3;
   object-fit: cover;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--surface-2);
-  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 30px 60px -18px rgba(0, 0, 0, 0.9);
 }
 
 .anime-titulo {
@@ -819,10 +852,12 @@ svg.ico[stroke] {
   .anime-hero {
     grid-template-columns: 1fr;
     gap: 20px;
+    min-height: 300px;
+    padding: 20px;
   }
 
   .anime-capa {
-    max-width: 180px;
+    max-width: 140px;
   }
 
   .anime-titulo {

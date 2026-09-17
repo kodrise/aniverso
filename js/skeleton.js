@@ -49,6 +49,21 @@ window.Skeleton = (function () {
         </div>`);
     },
 
+    // hero do detalhe do anime (capa + texto) — preenche a marcação existente
+    setAnimeHero() {
+      const titulo = document.getElementById('titulo');
+      const meta = document.getElementById('meta');
+      const generos = document.getElementById('generos');
+      const sinopse = document.getElementById('sinopse');
+      const capa = document.getElementById('capa');
+
+      if (titulo) titulo.innerHTML = '<div class="sk sk-linha" style="height: 34px; width: 60%"></div>';
+      if (meta) meta.innerHTML = '<div class="sk sk-pill" style="width: 150px"></div>';
+      if (generos) generos.innerHTML = '<div class="sk sk-linha curta" style="height: 26px; width: 40%"></div>';
+      if (sinopse) sinopse.innerHTML = '<div class="sk sk-linha" style="margin-bottom: 6px"></div><div class="sk sk-linha media" style="margin-bottom: 6px"></div><div class="sk sk-linha curta"></div>';
+      if (capa) capa.classList.add('sk');
+    },
+
     // hero do carrossel da home
     setHero(id) {
       const alvo = document.getElementById(id);
