@@ -186,6 +186,8 @@ async function carregarCatalogo() {
     return;
   }
 
+  Skeleton.setGrid('grid-animes', 12);
+
   const { genero, ano, tipo, audio, page } = filtros;
   const params = { genero, tipo, audio, page, per_page: CATALOGO_POR_PAGINA, ordem: filtros.ordem, desc: true };
 

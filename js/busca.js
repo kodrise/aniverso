@@ -58,6 +58,8 @@ async function carregarBusca() {
     return;
   }
 
+  Skeleton.setGrid('resultados', 12);
+
   const dados = await AniversoAPI.animes({ busca: termo, per_page: 40 });
   const animes = (dados?.animes ?? []).filter(ehReal).filter((anime) => anime.episodes_count > 0);
 

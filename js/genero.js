@@ -47,6 +47,8 @@ async function carregarGenero() {
     return;
   }
 
+  Skeleton.setGrid('grid-genero', 12);
+
   const dados = await AniversoAPI.animes({ genero: nome, per_page: 40 });
   const animes = dados?.animes ?? [];
 

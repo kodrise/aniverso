@@ -26,18 +26,6 @@ function hrefWatch(slug, numero) {
   return `/watch.html?slug=${encodeURIComponent(slug)}&ep=${encodeURIComponent(numero)}`;
 }
 
-function tempoRelativo(iso) {
-  if (!iso) return '';
-  const horas = (Date.now() - new Date(iso).getTime()) / 3600000;
-  if (!Number.isFinite(horas)) return '';
-  if (horas < 1) return 'agora';
-  if (horas < 24) return `${Math.floor(horas)}h atrás`;
-  const dias = horas / 24;
-  if (dias < 7) return `${Math.floor(dias)}d atrás`;
-  if (dias < 30) return `${Math.floor(dias / 7)}sem atrás`;
-  return `${Math.floor(dias / 30)}m atrás`;
-}
-
 function vistos(slug) {
   try {
     const lista = JSON.parse(localStorage.getItem(WATCH_ASSISTIDOS_PREFIXO + slug) ?? '[]');
@@ -220,47 +208,38 @@ async function carregarMeta(slug) {
 
 function epCardHTML(anime, ep, idx) {
   const status = WATCH_STATUS.includes(ep.status) ? ep.status : 'unknown';
-  const assistidos = vistos(anime.slug);
-  const visto = assistidos.includes(Number(ep.numero));
-  const classes = ['ep-card', status === 'dead' ? 'dead' : '', visto ? 'watched' : '', idx === indiceAtual ? 'current' : ''].filter(Boolean).join(' ');
-  const numero = escapar(ep.numero);
-  const thumbSrc = ep.thumb || anime.capa;
-  const capa = thumbSrc
-    ? `<img src="${escapar(thumbSrc)}" alt="" loading="lazy" decoding="async">`
-    : '<span class="ep-card-placeholder"></span>';
-  const nomeReal = Boolean(ep.titulo) && !/^Ep(is[oó]dio)?\s*\d+$/i.test(ep.titulo);
-  const tituloTexto = nomeReal ? escapar(ep.titulo) : '';
-  const tituloHtml = tituloTexto
-    ? `<div class="ep-card-titulo${tituloTexto.length <= 15 ? ' curto' : ''}">${tituloTexto}</div>`
-    : '';
-  const tempo = ep.atualizado_em;
-  const foot = tempo
-    ? `<div class="ep-card-foot"><span class="ep-time">${tempoRelativo(tempo)}</span></div>`
-    : '';
+  const numero = Number(ep.numero);
+  const visto = vistos(anime.slug).includes(numero);
+  const classes = ['ep-lista', status === 'dead' ? 'dead' : '', visto ? 'watched' : '', idx === indiceAtual ? 'atual' : ''].filter(Boolean).join(' ');
 
-  const miolo = `
-    <div class="ep-card-thumb">
-      ${capa}
-      <span class="ep-card-play"></span>
-      <span class="ep-card-num">EP ${numero}</span>
-      <span class="ep-card-status ${status}"></span>
-    </div>
-    <div class="ep-card-body${tituloHtml ? '' : ' sem-titulo'}">
-      ${tituloHtml}
-      ${foot}
-    </div>`;
+  const thumbSrc = ep.thumb || anime.capa;
+  const img = thumbSrc
+    ? `<img src="${escapar(thumbSrc)}" alt="" loading="lazy" decoding="async">`
+    : '';
+  const badgeVisto = visto ? '<span class="ep-lista-visto">Visto</span>' : '';
+
+  const nomeReal = ep.episode_name || ep.titulo;
+  const generico = !nomeReal || /^Ep(is[oó]dio)?\s*\d+$/i.test(nomeReal);
+  const titulo = generico ? `Episódio ${numero}` : nomeReal;
+
+  const miolo = `<span class="ep-lista-num">${escapar(numero)}</span>
+      <div class="ep-lista-thumb">${img}</div>
+      <div class="ep-lista-body">
+        <div class="ep-lista-titulo">${escapar(titulo)}</div>
+      </div>
+      ${badgeVisto}`;
 
   if (status === 'dead') {
     return `<span class="${classes}" title="Episódio indisponível">${miolo}</span>`;
   }
-  return `<a class="${classes}" data-ep="${numero}" href="${hrefWatch(anime.slug, ep.numero)}">${miolo}</a>`;
+  return `<a class="${classes}" data-ep="${escapar(numero)}" href="${hrefWatch(anime.slug, ep.numero)}">${miolo}</a>`;
 }
 
 function renderEpisodios() {
   const container = document.getElementById('eps');
   if (!container) return;
   container.innerHTML = episodiosVivos.map((ep, i) => epCardHTML(animeAtual, ep, i)).join('');
-  const atual = container.querySelector('.ep-card.current');
+  const atual = container.querySelector('.ep-lista.atual');
   if (atual) atual.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 
@@ -555,6 +534,8 @@ async function carregarWatch() {
     return;
   }
 
+  Skeleton.setEpGrid('eps', 6);
+
   const anime = await AniversoAPI.lite(slug);
   if (!anime) {
     window.location = '/404.html';
@@ -567,6 +548,8 @@ async function carregarWatch() {
 
   if (!episodiosVivos.length) {
     document.title = `${anime.titulo} — Aniverso`;
+    const epsVazio = document.getElementById('eps');
+    if (epsVazio) epsVazio.innerHTML = '';
     mostrarErro(WATCH_TEXTO_SEM_EPS);
     return;
   }

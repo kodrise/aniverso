@@ -4,6 +4,15 @@ const HOME_CACHE_PREFIXO = 'home_';
 const HOME_CACHE_TTL = 300000;
 const HOME_NOVOS_CARDS = 10;
 const HOME_HERO_TOTAL = 3;
+const HOME_HERO_SLUGS = [
+  'naruto-shippuden-online-hd-8',
+  'one-piece-online-hd-3',
+  'solo-leveling-online-hd-11',
+  'jujutsu-kaisen-online-hd-1',
+  'tokyo-revengers',
+  'black-clover',
+  'dragon-ball-super-online-hd'
+];
 const HOME_HERO_INTERVALO = 7000;
 const HOME_HERO_PAUSA = 30000;
 const HOME_HERO_FADE = 250;
@@ -87,6 +96,7 @@ function reduzirHero(anime) {
     capa: anime.capa,
     nota: anime.nota,
     tipo: anime.tipo,
+    ano: anime.ano,
     status: anime.status,
     generos: (anime.generos ?? []).slice(0, 3)
   };
@@ -193,15 +203,17 @@ function ligarRailNav() {
   document.querySelector('.rail-nav-next')?.addEventListener('click', () => rolar(HOME_RAIL_PASSO));
 }
 
-function heroHTML(anime) {
+function slideHTML(anime, indice) {
   const fundo = anime.capa ? ` style="background-image:url('${escapar(anime.capa)}')"` : '';
   const capa = anime.capa ? ` src="${escapar(anime.capa)}"` : '';
-  const tipo = anime.tipo ? `<span>${escapar(anime.tipo)}</span>` : '';
+  const tipo = anime.tipo ? `<span class="tipo">${escapar(anime.tipo)}</span>` : '';
+  const ano = anime.ano ? `<span class="ano">${escapar(anime.ano)}</span>` : '';
   const status = anime.status
     ? `<span class="status"><span class="status-dot"></span> ${escapar(anime.status)}</span>`
     : '';
 
-  return `<div class="hero-bg"${fundo}></div>
+  return `<div class="hero-slide${indice === heroIndice ? ' active' : ''}" data-i="${indice}">
+      <div class="hero-bg"${fundo}></div>
       <div class="hero-scrim"></div>
       <div class="hero-content">
         <img class="hero-capa"${capa} alt="">
@@ -210,6 +222,7 @@ function heroHTML(anime) {
           <div class="hero-meta">
             <span class="nota">${icone('star')} ${escapar(anime.nota)}</span>
             ${tipo}
+            ${ano}
             ${status}
           </div>
           <div class="hero-pills">
@@ -218,9 +231,24 @@ function heroHTML(anime) {
           <a class="hero-cta" href="/anime.html?slug=${encodeURIComponent(anime.slug)}">${icone('play')} Assistir Agora</a>
         </div>
       </div>
-      <div class="hero-dots">
-        ${heroAnimes.map((item, i) => `<span class="${i === heroIndice ? 'active' : ''}" data-i="${i}"></span>`).join('')}
-      </div>`;
+    </div>`;
+}
+
+function heroHTML() {
+  return `<div class="hero-card">
+      <div class="hero-slides">
+        ${heroAnimes.map((anime, i) => slideHTML(anime, i)).join('')}
+      </div>
+      <button class="hero-nav hero-nav-prev" type="button" aria-label="Anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button class="hero-nav hero-nav-next" type="button" aria-label="Próximo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="hero-dots">
+      ${heroAnimes.map((item, i) => `<span class="${i === heroIndice ? 'active' : ''}" data-i="${i}"></span>`).join('')}
+    </div>`;
 }
 
 function ligarDotsHero(hero) {
@@ -230,36 +258,38 @@ function ligarDotsHero(hero) {
       pausarHero();
     });
   }
+
+  hero.querySelector('.hero-nav-prev')?.addEventListener('click', () => {
+    irParaHero(heroIndice - 1);
+    pausarHero();
+  });
+
+  hero.querySelector('.hero-nav-next')?.addEventListener('click', () => {
+    irParaHero(heroIndice + 1);
+    pausarHero();
+  });
 }
 
 function pararProgressoHero() {
-  if (heroProgressoRaf) cancelAnimationFrame(heroProgressoRaf);
-  heroProgressoRaf = null;
+  const hero = document.getElementById('hero');
+  const dots = hero?.querySelector('.hero-dots');
+  if (dots) dots.classList.add('pausado');
 }
 
 function animarProgressoHero() {
   pararProgressoHero();
-  heroProgressoInicio = performance.now();
 
-  const passo = () => {
-    const hero = document.getElementById('hero');
-    const ativo = hero?.querySelector('.hero-dots span.active');
+  const hero = document.getElementById('hero');
+  const dots = hero?.querySelector('.hero-dots');
+  const ativo = hero?.querySelector('.hero-dots span.active');
 
-    if (!ativo || heroAnimes.length < 2) {
-      pararProgressoHero();
-      return;
-    }
+  if (!dots || !ativo || heroAnimes.length < 2) return;
 
-    const decorrido = performance.now() - heroProgressoInicio;
-    const fracao = Math.min(decorrido / HOME_HERO_INTERVALO, 1);
-    ativo.style.setProperty('--progresso', fracao.toFixed(4));
-
-    if (fracao < 1 && heroTimer) {
-      heroProgressoRaf = requestAnimationFrame(passo);
-    }
-  };
-
-  heroProgressoRaf = requestAnimationFrame(passo);
+  ativo.style.setProperty('--duracao', `${HOME_HERO_INTERVALO}ms`);
+  ativo.classList.remove('rodando');
+  void ativo.offsetWidth;
+  ativo.classList.add('rodando');
+  dots.classList.remove('pausado');
 }
 
 function ligarInteracaoHero(hero) {
@@ -317,11 +347,21 @@ function renderHero(indice) {
   if (!hero || !heroAnimes.length) return;
 
   heroIndice = indice;
-  hero.innerHTML = heroHTML(heroAnimes[indice]);
 
-  ligarDotsHero(hero);
-  ligarSwipeHero(hero);
-  ligarInteracaoHero(hero);
+  if (!hero.querySelector('.hero-slides')) {
+    hero.innerHTML = heroHTML();
+    ligarDotsHero(hero);
+    ligarSwipeHero(hero);
+    ligarInteracaoHero(hero);
+  }
+
+  for (const slide of hero.querySelectorAll('.hero-slide')) {
+    slide.classList.toggle('active', Number(slide.dataset.i) === indice);
+  }
+
+  for (const ponto of hero.querySelectorAll('.hero-dots span')) {
+    ponto.classList.toggle('active', Number(ponto.dataset.i) === indice);
+  }
 
   if (heroTimer && !heroEmHover && !document.hidden) {
     animarProgressoHero();
@@ -335,12 +375,7 @@ function irParaHero(indice) {
   const destino = ((indice % heroAnimes.length) + heroAnimes.length) % heroAnimes.length;
   if (destino === heroIndice) return;
 
-  hero.classList.add('trocando');
-
-  setTimeout(() => {
-    renderHero(destino);
-    hero.classList.remove('trocando');
-  }, HOME_HERO_FADE);
+  renderHero(destino);
 }
 
 function reiniciarHeroTimer() {
@@ -363,7 +398,7 @@ function pausarHero() {
 
   const hero = document.getElementById('hero');
   const ativo = hero?.querySelector('.hero-dots span.active');
-  if (ativo) ativo.style.setProperty('--progresso', '0');
+  if (ativo) ativo.classList.remove('rodando');
 
   heroPausaTimer = setTimeout(() => {
     heroPausaTimer = null;
@@ -381,15 +416,19 @@ async function carregarHero() {
     }
 
     heroAnimes = await comCache('hero', async () => {
-      const dados = await AniversoAPI.animes({ nota_min: 4, ordem: 'nota', desc: true, per_page: 10 });
-      if (!dados) return null;
+      const base = Math.floor(Date.now() / 86400000) % HOME_HERO_SLUGS.length;
+      const slugs = [];
+      for (let i = 0; i < HOME_HERO_TOTAL; i++) {
+        slugs.push(HOME_HERO_SLUGS[(base + i) % HOME_HERO_SLUGS.length]);
+      }
 
-      const escolhidos = aproveitaveis(dados)
-        .filter((anime) => anime.titulo.includes(' '))
-        .slice(0, HOME_HERO_TOTAL)
-        .map(reduzirHero);
+      const escolhidos = await Promise.all(slugs.map(async (slug) => {
+        const anime = await AniversoAPI.anime(slug);
+        return anime ? reduzirHero(anime) : null;
+      }));
 
-      return escolhidos.length ? escolhidos : null;
+      const validos = escolhidos.filter(Boolean);
+      return validos.length === HOME_HERO_TOTAL ? validos : null;
     });
 
     if (!heroAnimes || !heroAnimes.length) {
@@ -537,6 +576,7 @@ function ligarBusca() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  Skeleton.pintarPagina();
   ligarBusca();
   ligarRailNav();
   carregarHome();

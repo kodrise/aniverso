@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=27">
+  <link rel="stylesheet" href="css/style.css?v=37">
 </head>
 <body>
   <header class="header">
@@ -40,15 +40,17 @@
         <div class="anime-meta" id="meta"></div>
         <div class="generos-pills" id="generos"></div>
         <p class="sinopse" id="sinopse"></p>
-        <a class="btn-assistir" id="btn-assistir" href="#"></a>
       </div>
     </section>
 
     <section class="secao" id="episodios-section">
       <header class="secao-head">
         <h2 class="secao-titulo">Episódios</h2>
-        <span class="secao-contagem" id="eps-contagem"></span>
       </header>
+      <div class="eps-filtro">
+        <input type="search" id="eps-busca" placeholder="Buscar episódio..." autocomplete="off" aria-label="Buscar episódio">
+        <button class="eps-ver-mais" id="eps-ver-mais" type="button" hidden>Ver todos</button>
+      </div>
       <div class="eps-botoes" id="eps"></div>
     </section>
 
@@ -69,6 +71,7 @@
   <script src="js/icons.js"></script>
   <script src="js/api.js"></script>
   <script src="js/busca-live.js"></script>
-  <script src="js/anime.js"></script>
+  <script src="js/skeleton.js"></script>
+  <script src="js/anime.js?v=7"></script>
 </body>
 </html>
