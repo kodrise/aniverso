@@ -2,29 +2,47 @@ const WATCH_ASSISTIDOS_PREFIXO = 'aniverso_assistidos_';
 const WATCH_TEXTO_INDISPONIVEL = 'Episódio não disponível';
 const WATCH_TEXTO_SEM_EPS = 'Nenhum episódio disponível';
 const WATCH_STATUS = ['alive', 'dead', 'unknown'];
-const WATCH_LOADING_MAX = 15000;
-const WATCH_TEXTO_LENTO = 'Vídeo demorou pra carregar';
-const WATCH_CLIQUE_CHAVE = 'aniverso_clique_assistir';
+const WATCH_LOADING_MAX = 8000;
+const WATCH_VIDEO_TIMEOUT = 7000;
 
-let inicioDoClique = 0;
+const ICONE_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+const ICONE_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+
+let animeAtual = null;
+let episodiosVivos = [];
+let indiceAtual = -1;
+let embedUrlAtual = '';
+let controlsTimeout = null;
 
 function escapar(valor) {
   return String(valor)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"');
 }
 
 function hrefWatch(slug, numero) {
   return `/watch.html?slug=${encodeURIComponent(slug)}&ep=${encodeURIComponent(numero)}`;
 }
 
+function tempoRelativo(iso) {
+  if (!iso) return '';
+  const horas = (Date.now() - new Date(iso).getTime()) / 3600000;
+  if (!Number.isFinite(horas)) return '';
+  if (horas < 1) return 'agora';
+  if (horas < 24) return `${Math.floor(horas)}h atrás`;
+  const dias = horas / 24;
+  if (dias < 7) return `${Math.floor(dias)}d atrás`;
+  if (dias < 30) return `${Math.floor(dias / 7)}sem atrás`;
+  return `${Math.floor(dias / 30)}m atrás`;
+}
+
 function vistos(slug) {
   try {
     const lista = JSON.parse(localStorage.getItem(WATCH_ASSISTIDOS_PREFIXO + slug) ?? '[]');
     return Array.isArray(lista) ? lista.map(Number) : [];
-  } catch (erro) {
+  } catch {
     return [];
   }
 }
@@ -39,119 +57,493 @@ function marcarAssistido(slug, numero) {
   }
 }
 
-function marcarInicioDoPlayer() {
-  let clique = 0;
-
-  try {
-    clique = Number(sessionStorage.getItem(WATCH_CLIQUE_CHAVE)) || 0;
-    sessionStorage.removeItem(WATCH_CLIQUE_CHAVE);
-  } catch (erro) {
-    clique = 0;
-  }
-
-  inicioDoClique = clique || Date.now();
-
-  const desde = inicioDoClique - performance.timeOrigin;
-  if (desde > 0) performance.mark('player-inicio', { startTime: desde });
-  else performance.mark('player-inicio');
+function getPrimeiroVivo(episodios) {
+  return episodios.find(ep => ep.status !== 'dead') || episodios[0];
 }
 
-function marcarPlayerPronto() {
-  performance.mark('player-pronto');
-  performance.measure('clique-ate-video', 'player-inicio', 'player-pronto');
-
-  const medida = performance.getEntriesByName('clique-ate-video')[0];
-  const total = inicioDoClique ? Date.now() - inicioDoClique : medida.duration;
-
-  console.log(`[player] clique→vídeo: ${total.toFixed(0)}ms`);
+function esconderControlesVideo() {
+  const video = document.getElementById('player-video');
+  const toggle = document.getElementById('video-toggle');
+  const controls = document.getElementById('video-controls');
+  try { video?.pause(); } catch {}
+  if (video) { video.removeAttribute('src'); video.hidden = true; }
+  if (toggle) toggle.hidden = true;
+  if (controls) controls.hidden = true;
+  clearTimeout(controlsTimeout);
 }
 
-function esconderCarregando() {
-  const carregando = document.getElementById('player-loading');
-  if (carregando) carregando.hidden = true;
+function mostrarLoading() {
+  const loading = document.getElementById('player-loading');
+  const erro = document.getElementById('player-erro');
+  if (loading) loading.hidden = false;
+  esconderControlesVideo();
+  const iframe = document.getElementById('player');
+  if (iframe) iframe.hidden = true;
+  if (erro) erro.hidden = true;
+}
+
+function esconderLoading() {
+  const loading = document.getElementById('player-loading');
+  if (loading) loading.hidden = true;
 }
 
 function mostrarPlayer(url) {
-  const player = document.getElementById('player');
-  const carregando = document.getElementById('player-loading');
-  let carregou = false;
-
-  carregando.hidden = false;
-
-  player.addEventListener('load', () => {
-    carregou = true;
-    esconderCarregando();
-    marcarPlayerPronto();
-  }, { once: true });
-
-  setTimeout(() => {
-    if (!carregou) mostrarErro(WATCH_TEXTO_LENTO);
-  }, WATCH_LOADING_MAX);
-
-  player.src = url;
-  player.hidden = false;
-}
-
-function mostrarErro(texto) {
-  const player = document.getElementById('player');
+  const iframe = document.getElementById('player');
   const erro = document.getElementById('player-erro');
+  if (!iframe) return;
 
-  esconderCarregando();
-  player.hidden = true;
-  player.removeAttribute('src');
-  erro.textContent = texto;
-  erro.hidden = false;
-}
+  esconderControlesVideo();
+  embedUrlAtual = url;
+  mostrarLoading();
 
-function epBotaoPlayer(anime, episodio, atual) {
-  const status = WATCH_STATUS.includes(episodio.status) ? episodio.status : 'unknown';
-  const classes = ['ep-btn', status, Number(episodio.numero) === Number(atual) ? 'current' : ''].filter(Boolean).join(' ');
-  const rotulo = `Ep ${escapar(episodio.numero)}`;
-
-  if (status === 'dead') {
-    return `<span class="${classes}" title="Episódio indisponível">${rotulo}</span>`;
-  }
-
-  return `<a class="${classes}" href="${hrefWatch(anime.slug, episodio.numero)}">${rotulo}</a>`;
-}
-
-function renderEps(anime, episodios, atual) {
-  document.getElementById('eps').innerHTML = episodios.map((ep) => epBotaoPlayer(anime, ep, atual)).join('');
-}
-
-function ligarNavegacao(anime, episodios, atual) {
-  const indice = episodios.findIndex((ep) => Number(ep.numero) === Number(atual));
-
-  const destinos = {
-    prev: indice > 0 ? episodios[indice - 1] : null,
-    next: indice > -1 && indice < episodios.length - 1 ? episodios[indice + 1] : null
+  let liberado = false;
+  const liberar = () => {
+    if (liberado) return;
+    liberado = true;
+    esconderLoading();
+    if (iframe) iframe.hidden = false;
   };
 
-  for (const [id, destino] of Object.entries(destinos)) {
-    const link = document.getElementById(id);
+  iframe.addEventListener('load', liberar, { once: true });
+  setTimeout(liberar, WATCH_LOADING_MAX);
 
-    if (!link.dataset.pintado) {
-      const seta = icone(id === 'prev' ? 'arrowLeft' : 'arrowRight');
-      link.insertAdjacentHTML(id === 'prev' ? 'afterbegin' : 'beforeend', id === 'prev' ? `${seta} ` : ` ${seta}`);
-      link.dataset.pintado = '1';
-    }
+  iframe.src = url;
+}
 
-    if (!destino) {
-      link.removeAttribute('href');
-      link.style.opacity = '0.3';
-      continue;
-    }
+function mostrarErro(msg) {
+  const iframe = document.getElementById('player');
+  const erro = document.getElementById('player-erro');
+  if (!erro) return;
 
-    link.href = hrefWatch(anime.slug, destino.numero);
-    link.style.opacity = '';
+  esconderControlesVideo();
+  esconderLoading();
+  if (iframe) {
+    iframe.hidden = true;
+    iframe.removeAttribute('src');
   }
+  erro.innerHTML = `
+    <strong>${escapar(msg)}</strong>
+    <button type="button" id="btn-retry">Tentar de novo</button>
+  `;
+  erro.hidden = false;
+
+  const btnRetry = document.getElementById('btn-retry');
+  if (btnRetry) btnRetry.addEventListener('click', () => { if (embedUrlAtual) mostrarPlayer(embedUrlAtual); });
+}
+
+function atualizarTitulo() {
+  if (!animeAtual) return;
+  const ep = episodiosVivos[indiceAtual];
+  document.title = `${animeAtual.titulo} — Ep ${ep?.numero ?? '?'} — Aniverso`;
+}
+
+function pintarCabecalho() {
+  if (!animeAtual) return;
+  const ep = episodiosVivos[indiceAtual];
+  const titulo = document.getElementById('titulo');
+  const badge = document.getElementById('ep-badge');
+  const sub = document.getElementById('sub');
+
+  titulo.textContent = animeAtual.titulo;
+
+  if (ep) {
+    badge.textContent = `EP ${ep.numero}`;
+    badge.hidden = false;
+    const nome = ep.titulo && !/^Ep(is[oó]dio)?\s*\d+$/i.test(ep.titulo) ? ep.titulo : '';
+    sub.textContent = nome || `Episódio ${ep.numero}`;
+    sub.classList.toggle('ep-nome', Boolean(nome));
+  } else {
+    badge.hidden = true;
+    sub.textContent = '';
+    sub.classList.remove('ep-nome');
+  }
+
+  document.getElementById('voltar').href = `/anime.html?slug=${encodeURIComponent(animeAtual.slug)}`;
+}
+
+function preencherMeta(anime) {
+  const meta = document.getElementById('watch-meta');
+  if (!meta) return;
+
+  const chips = [];
+  if (anime.ano) chips.push({ classe: 'meta', texto: String(anime.ano) });
+  if (anime.tipo) chips.push({ classe: 'meta', texto: anime.tipo });
+  if (anime.episodes_count) chips.push({ classe: 'meta', texto: `${anime.episodes_count} episódios` });
+
+  const audios = Array.isArray(anime.audio) ? anime.audio : (anime.audio ? [anime.audio] : []);
+  for (const audio of audios) {
+    const a = String(audio).toLowerCase();
+    if (a.includes('dub')) chips.push({ classe: 'audio-dub', texto: 'Dublado' });
+    else if (a.includes('leg')) chips.push({ classe: 'audio-leg', texto: 'Legendado' });
+  }
+
+  const generos = Array.isArray(anime.generos) ? anime.generos.slice(0, 5) : [];
+  for (const genero of generos) chips.push({ classe: 'genero', texto: genero });
+
+  const chipsHtml = chips
+    .map(c => `<span class="watch-meta-chip ${escapar(c.classe)}">${escapar(c.texto)}</span>`)
+    .join('');
+
+  let sinopse = '';
+  if (anime.sinopse) {
+    const texto = escapar(anime.sinopse);
+    if (anime.sinopse.length > 220) {
+      sinopse = `<p class="watch-meta-sinopse clamp" data-full="${texto}">${texto}</p>
+        <button class="watch-meta-mais" type="button" aria-expanded="false">Ler mais</button>`;
+    } else {
+      sinopse = `<p class="watch-meta-sinopse">${texto}</p>`;
+    }
+  }
+
+  if (!chipsHtml && !sinopse) return;
+  meta.innerHTML = (chipsHtml ? `<div class="watch-meta-chips">${chipsHtml}</div>` : '') + sinopse;
+
+  const btnMais = meta.querySelector('.watch-meta-mais');
+  const paragrafo = meta.querySelector('.watch-meta-sinopse.clamp');
+  if (btnMais && paragrafo) {
+    btnMais.addEventListener('click', () => {
+      const expandido = paragrafo.classList.toggle('expandido');
+      btnMais.textContent = expandido ? 'Ler menos' : 'Ler mais';
+      btnMais.setAttribute('aria-expanded', String(expandido));
+    });
+  }
+}
+
+async function carregarMeta(slug) {
+  try {
+    const anime = await AniversoAPI.anime(slug);
+    if (anime) preencherMeta(anime);
+  } catch (erro) {
+    console.error('[Aniverso] não consegui carregar a meta do anime', erro);
+  }
+}
+
+function epCardHTML(anime, ep, idx) {
+  const status = WATCH_STATUS.includes(ep.status) ? ep.status : 'unknown';
+  const assistidos = vistos(anime.slug);
+  const visto = assistidos.includes(Number(ep.numero));
+  const classes = ['ep-card', status === 'dead' ? 'dead' : '', visto ? 'watched' : '', idx === indiceAtual ? 'current' : ''].filter(Boolean).join(' ');
+  const numero = escapar(ep.numero);
+  const thumbSrc = ep.thumb || anime.capa;
+  const capa = thumbSrc
+    ? `<img src="${escapar(thumbSrc)}" alt="" loading="lazy" decoding="async">`
+    : '<span class="ep-card-placeholder"></span>';
+  const nomeReal = Boolean(ep.titulo) && !/^Ep(is[oó]dio)?\s*\d+$/i.test(ep.titulo);
+  const tituloTexto = nomeReal ? escapar(ep.titulo) : '';
+  const tituloHtml = tituloTexto
+    ? `<div class="ep-card-titulo${tituloTexto.length <= 15 ? ' curto' : ''}">${tituloTexto}</div>`
+    : '';
+  const tempo = ep.atualizado_em;
+  const foot = tempo
+    ? `<div class="ep-card-foot"><span class="ep-time">${tempoRelativo(tempo)}</span></div>`
+    : '';
+
+  const miolo = `
+    <div class="ep-card-thumb">
+      ${capa}
+      <span class="ep-card-play"></span>
+      <span class="ep-card-num">EP ${numero}</span>
+      <span class="ep-card-status ${status}"></span>
+    </div>
+    <div class="ep-card-body${tituloHtml ? '' : ' sem-titulo'}">
+      ${tituloHtml}
+      ${foot}
+    </div>`;
+
+  if (status === 'dead') {
+    return `<span class="${classes}" title="Episódio indisponível">${miolo}</span>`;
+  }
+  return `<a class="${classes}" data-ep="${numero}" href="${hrefWatch(anime.slug, ep.numero)}">${miolo}</a>`;
+}
+
+function renderEpisodios() {
+  const container = document.getElementById('eps');
+  if (!container) return;
+  container.innerHTML = episodiosVivos.map((ep, i) => epCardHTML(animeAtual, ep, i)).join('');
+  const atual = container.querySelector('.ep-card.current');
+  if (atual) atual.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+
+function ligarNavegacao() {
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  if (!prev || !next) return;
+
+  if (indiceAtual > 0) {
+    prev.href = hrefWatch(animeAtual.slug, episodiosVivos[indiceAtual - 1].numero);
+    prev.classList.remove('disabled');
+  } else {
+    prev.removeAttribute('href');
+    prev.classList.add('disabled');
+  }
+
+  if (indiceAtual < episodiosVivos.length - 1) {
+    next.href = hrefWatch(animeAtual.slug, episodiosVivos[indiceAtual + 1].numero);
+    next.classList.remove('disabled');
+  } else {
+    next.removeAttribute('href');
+    next.classList.add('disabled');
+  }
+}
+
+let embedSeq = 0;
+
+async function carregarEmbed(numero) {
+  const seq = ++embedSeq;
+  mostrarLoading();
+  const embed = await AniversoAPI.embed(animeAtual.slug, numero);
+  if (seq !== embedSeq) return;
+  if (!embed?.embed_url) {
+    mostrarErro(WATCH_TEXTO_INDISPONIVEL);
+    return;
+  }
+  tentarPlayerNativo(AniversoAPI.stream(animeAtual.slug, numero), embed.embed_url, seq);
+}
+
+/**
+ * Tenta o player nativo (<video>) com a URL de stream direto — seek decente,
+ * controles próprios. Se o navegador não conseguir carregar (formato/origem),
+ * cai no iframe do embed.
+ */
+function tentarPlayerNativo(streamUrl, fallbackEmbed, seq) {
+  const video = document.getElementById('player-video');
+  const iframe = document.getElementById('player');
+  const toggle = document.getElementById('video-toggle');
+  const controls = document.getElementById('video-controls');
+  if (!video) { mostrarPlayer(fallbackEmbed); return; }
+
+  let resolveu = false;
+  const limpar = () => {
+    video.removeEventListener('loadedmetadata', pronto);
+    video.removeEventListener('error', cair);
+  };
+  const cair = () => {
+    if (resolveu) return;
+    resolveu = true;
+    limpar();
+    esconderControlesVideo();
+    mostrarPlayer(fallbackEmbed);
+  };
+  const pronto = () => {
+    if (resolveu || seq !== embedSeq) return;
+    resolveu = true;
+    limpar();
+    if (iframe) iframe.hidden = true;
+    video.hidden = false;
+    if (toggle) toggle.hidden = false;
+    if (controls) controls.hidden = false;
+    esconderLoading();
+    void video.play().catch(() => {});
+  };
+
+  video.addEventListener('loadedmetadata', pronto, { once: true });
+  video.addEventListener('error', cair, { once: true });
+  video.src = streamUrl;
+  setTimeout(cair, WATCH_VIDEO_TIMEOUT);
+}
+
+function setupVideoPlayer() {
+  const video = document.getElementById('player-video');
+  const controls = document.getElementById('video-controls');
+  const toggle = document.getElementById('video-toggle');
+  const btnPlay = document.getElementById('video-play');
+  const bar = document.getElementById('video-bar');
+  const progress = document.getElementById('video-progress');
+  const time = document.getElementById('video-time');
+  const stage = document.querySelector('.watch-stage');
+  if (!video || !controls) return;
+
+  const formatar = (s) => {
+    if (!Number.isFinite(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const ss = Math.floor(s % 60);
+    return `${m}:${String(ss).padStart(2, '0')}`;
+  };
+
+  const atualizar = () => {
+    const pct = video.duration ? (video.currentTime / video.duration) * 100 : 0;
+    progress.style.width = `${pct}%`;
+    bar.setAttribute('aria-valuenow', Math.round(pct));
+    time.textContent = `${formatar(video.currentTime)} / ${formatar(video.duration)}`;
+  };
+
+  const sincronizar = () => {
+    const pausado = video.paused || video.ended;
+    toggle.classList.toggle('pausado', pausado);
+    btnPlay.innerHTML = pausado ? ICONE_PLAY : ICONE_PAUSE;
+    btnPlay.setAttribute('aria-label', pausado ? 'Reproduzir' : 'Pausar');
+    clearTimeout(controlsTimeout);
+    controls.classList.add('visivel');
+    if (!pausado) {
+      controlsTimeout = setTimeout(() => controls.classList.remove('visivel'), 3000);
+    }
+    atualizar();
+  };
+
+  const togglePlay = () => {
+    if (video.ended) { video.currentTime = 0; void video.play(); }
+    else if (video.paused) void video.play();
+    else video.pause();
+  };
+
+  toggle.addEventListener('click', togglePlay);
+  btnPlay.addEventListener('click', togglePlay);
+  video.addEventListener('play', sincronizar);
+  video.addEventListener('pause', sincronizar);
+  video.addEventListener('ended', sincronizar);
+  video.addEventListener('timeupdate', atualizar);
+  video.addEventListener('loadedmetadata', atualizar);
+  video.addEventListener('volumechange', atualizar);
+
+  stage?.addEventListener('mousemove', () => {
+    if (video.hidden) return;
+    clearTimeout(controlsTimeout);
+    controls.classList.add('visivel');
+    if (!video.paused) {
+      controlsTimeout = setTimeout(() => controls.classList.remove('visivel'), 3000);
+    }
+  });
+
+  const buscar = (clienteX) => {
+    const r = bar.getBoundingClientRect();
+    if (!r.width) return;
+    const pct = Math.min(Math.max((clienteX - r.left) / r.width, 0), 1);
+    if (video.duration) video.currentTime = pct * video.duration;
+    atualizar();
+  };
+
+  let arrastando = false;
+  bar.addEventListener('pointerdown', (e) => {
+    arrastando = true;
+    bar.setPointerCapture(e.pointerId);
+    buscar(e.clientX);
+  });
+  bar.addEventListener('pointermove', (e) => { if (arrastando) buscar(e.clientX); });
+  bar.addEventListener('pointerup', () => { arrastando = false; });
+  bar.addEventListener('pointercancel', () => { arrastando = false; });
+  bar.addEventListener('keydown', (e) => {
+    if (!video.duration) return;
+    if (e.key === 'ArrowLeft') { video.currentTime = Math.max(0, video.currentTime - 5); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { video.currentTime = Math.min(video.duration, video.currentTime + 5); e.preventDefault(); }
+  });
+}
+
+function irParaEpisodio(indice, { empurrar = true } = {}) {
+  if (!animeAtual || indice < 0 || indice >= episodiosVivos.length) return;
+  if (indice === indiceAtual && embedUrlAtual) return;
+
+  const ep = episodiosVivos[indice];
+  indiceAtual = indice;
+
+  pintarCabecalho();
+  renderEpisodios();
+  ligarNavegacao();
+  atualizarTitulo();
+  marcarAssistido(animeAtual.slug, ep.numero);
+
+  if (empurrar) history.pushState(null, '', hrefWatch(animeAtual.slug, ep.numero));
+
+  carregarEmbed(ep.numero);
+}
+
+function ligarBotoesNavegacao() {
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+
+  if (prev) {
+    prev.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (prev.classList.contains('disabled')) return;
+      irParaEpisodio(indiceAtual - 1);
+    });
+  }
+
+  if (next) {
+    next.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (next.classList.contains('disabled')) return;
+      irParaEpisodio(indiceAtual + 1);
+    });
+  }
+
+  document.getElementById('eps')?.addEventListener('click', (e) => {
+    const link = e.target.closest('a[data-ep]');
+    if (!link) return;
+    e.preventDefault();
+    const numero = Number(link.dataset.ep);
+    const idx = episodiosVivos.findIndex(ep => Number(ep.numero) === numero);
+    if (idx >= 0) irParaEpisodio(idx);
+  });
+}
+
+window.addEventListener('popstate', () => {
+  if (!animeAtual) return;
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('slug');
+  if (slug && slug !== animeAtual.slug) {
+    window.location = hrefWatch(slug, params.get('ep') ?? '');
+    return;
+  }
+  const ep = params.has('ep') ? Number(params.get('ep')) : null;
+  const idx = ep ? episodiosVivos.findIndex(e => Number(e.numero) === ep) : 0;
+  if (idx >= 0) irParaEpisodio(idx, { empurrar: false });
+});
+
+function preloadHover() {
+  document.getElementById('eps')?.addEventListener('mouseover', async (e) => {
+    const link = e.target.closest('a[data-ep]');
+    if (!link || link.dataset.preloaded) return;
+    link.dataset.preloaded = '1';
+    const epNum = Number(link.dataset.ep);
+    const ep = animeAtual.episodios.find(e => Number(e.numero) === epNum);
+    if (ep && ep.status !== 'dead') {
+      try {
+        const embed = await AniversoAPI.embed(animeAtual.slug, epNum);
+        if (embed?.embed_url) link.dataset.embedUrl = embed.embed_url;
+      } catch {}
+    }
+  });
+}
+
+function setupFullscreen() {
+  const btn = document.getElementById('btn-fullscreen');
+  const video = document.getElementById('player-video');
+  const stage = document.querySelector('.watch-stage');
+  if (!btn || !stage) return;
+
+  const emTelaCheia = () => document.fullscreenElement || document.webkitFullscreenElement;
+
+  const entrar = (el) => {
+    const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (!fn) return;
+    const p = fn.call(el);
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+  };
+
+  const sair = () => {
+    const fn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (fn) fn.call(document);
+  };
+
+  btn.addEventListener('click', () => {
+    if (emTelaCheia()) sair();
+    else entrar(!video.hidden ? video : stage);
+  });
+
+  const sincronizar = () => {
+    const ativo = Boolean(emTelaCheia());
+    btn.setAttribute('aria-label', ativo ? 'Sair da tela cheia' : 'Tela cheia');
+    btn.classList.toggle('ativo', ativo);
+  };
+
+  document.addEventListener('fullscreenchange', sincronizar);
+  document.addEventListener('webkitfullscreenchange', sincronizar);
 }
 
 async function carregarWatch() {
-  marcarInicioDoPlayer();
-
-  const parametros = new URLSearchParams(window.location.search);
-  const slug = parametros.get('slug');
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('slug');
+  const pedido = params.has('ep') ? Number(params.get('ep')) : null;
 
   if (!slug) {
     window.location = '/404.html';
@@ -163,52 +555,42 @@ async function carregarWatch() {
     return;
   }
 
-  const pedido = parametros.has('ep') ? Number(parametros.get('ep')) : null;
-
-  const [anime, embedDoPedido] = await Promise.all([
-    AniversoAPI.lite(slug),
-    pedido === null ? Promise.resolve(null) : AniversoAPI.embed(slug, pedido)
-  ]);
-
+  const anime = await AniversoAPI.lite(slug);
   if (!anime) {
     window.location = '/404.html';
     return;
   }
 
-  const episodios = anime.episodios ?? [];
-  const atual = pedido === null ? episodios[0] : episodios.find((ep) => Number(ep.numero) === pedido);
+  animeAtual = anime;
+  const todos = anime.episodios ?? [];
+  episodiosVivos = todos.filter(ep => ep.status !== 'dead');
 
-  document.getElementById('titulo').textContent = anime.titulo;
-  document.getElementById('ep-label').textContent = atual ? `Episódio ${atual.numero}` : '';
-  renderEps(anime, episodios, atual?.numero);
-  ligarNavegacao(anime, episodios, atual?.numero);
-
-  if (!episodios.length) {
+  if (!episodiosVivos.length) {
     document.title = `${anime.titulo} — Aniverso`;
     mostrarErro(WATCH_TEXTO_SEM_EPS);
     return;
   }
 
-  if (!atual) {
-    document.title = `${anime.titulo} — Aniverso`;
-    mostrarErro(WATCH_TEXTO_INDISPONIVEL);
-    return;
+  let alvo = episodiosVivos[0];
+  if (pedido) {
+    const encontrado = episodiosVivos.find(ep => Number(ep.numero) === pedido);
+    if (encontrado) alvo = encontrado;
   }
+  indiceAtual = episodiosVivos.findIndex(ep => ep.numero === alvo.numero);
 
-  const embed = Number(embedDoPedido?.numero) === Number(atual.numero)
-    ? embedDoPedido
-    : await AniversoAPI.embed(anime.slug, atual.numero);
+  pintarCabecalho();
+  renderEpisodios();
+  ligarNavegacao();
+  ligarBotoesNavegacao();
+  preloadHover();
+  setupVideoPlayer();
+  setupFullscreen();
+  carregarMeta(anime.slug);
 
-  document.title = `${anime.titulo} — Ep ${atual.numero} — Aniverso`;
-
-  if (!embed?.embed_url) {
-    mostrarErro(WATCH_TEXTO_INDISPONIVEL);
-    return;
-  }
-
-  mostrarPlayer(embed.embed_url);
-  history.replaceState(null, '', hrefWatch(anime.slug, atual.numero));
-  marcarAssistido(anime.slug, atual.numero);
+  atualizarTitulo();
+  await carregarEmbed(alvo.numero);
+  history.replaceState(null, '', hrefWatch(anime.slug, alvo.numero));
+  marcarAssistido(anime.slug, alvo.numero);
 }
 
 document.addEventListener('DOMContentLoaded', carregarWatch);

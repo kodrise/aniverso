@@ -10,7 +10,10 @@
   <link rel="preconnect" href="https://www.blogger.com">
   <link rel="preconnect" href="https://streamapi-peach.vercel.app">
   <link rel="dns-prefetch" href="https://www.youtube.com">
-  <link rel="stylesheet" href="css/style.css?v=8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=27">
 </head>
 <body>
   <header class="header">
@@ -24,25 +27,70 @@
     </div>
   </header>
 
-  <main class="player-wrap">
-    <div class="player-head">
-      <h1 id="titulo"></h1>
-      <span class="ep" id="ep-label"></span>
-    </div>
+  <main class="watch">
+    <a class="watch-voltar" id="voltar" href="/index.html">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      Voltar
+    </a>
 
-    <div class="player-stage">
-      <div id="player-loading" class="player-loading">carregando vídeo...</div>
-      <iframe id="player" allowfullscreen hidden
-              allow="autoplay; encrypted-media; picture-in-picture"></iframe>
-      <div id="player-erro" class="aviso" hidden></div>
-    </div>
+    <header class="watch-head">
+      <div class="watch-head-linha">
+        <h1 class="watch-titulo" id="titulo"></h1>
+        <span class="watch-ep-badge" id="ep-badge" hidden></span>
+      </div>
+      <div class="watch-sub" id="sub"></div>
+    </header>
 
-    <div class="player-nav">
-      <a id="prev">Anterior</a>
-      <a id="next">Próximo</a>
-    </div>
+    <div class="watch-layout">
+      <div class="watch-main">
+        <div class="watch-player">
+          <div class="watch-stage">
+            <div class="watch-loading" id="player-loading">
+              <div class="spinner"></div>
+              <span>Carregando...</span>
+            </div>
+            <iframe id="player" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" hidden></iframe>
+            <video id="player-video" playsinline preload="metadata" hidden></video>
+            <button class="video-toggle" id="video-toggle" type="button" aria-label="Reproduzir ou pausar" hidden>
+              <svg class="video-toggle-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <div class="video-controls" id="video-controls" hidden>
+              <button class="video-btn" id="video-play" type="button" aria-label="Reproduzir ou pausar">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+              <div class="video-bar" id="video-bar" role="slider" aria-label="Progresso do vídeo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                <div class="video-progress" id="video-progress"></div>
+              </div>
+              <span class="video-time" id="video-time">0:00 / 0:00</span>
+            </div>
+            <div class="watch-erro" id="player-erro" hidden></div>
+          </div>
 
-    <div class="eps-list" id="eps"></div>
+          <div class="watch-nav">
+            <a class="watch-btn" id="prev" href="#">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+              Anterior
+            </a>
+            <button class="watch-btn watch-btn-ico" id="btn-fullscreen" type="button" aria-label="Tela cheia">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+            </button>
+            <a class="watch-btn watch-btn-primary" id="next" href="#">
+              Próximo
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="watch-meta" id="watch-meta"></div>
+      </div>
+
+      <aside class="watch-side">
+        <section class="watch-eps">
+          <h2 class="watch-eps-titulo">Episódios</h2>
+          <div class="watch-eps-lista" id="eps"></div>
+        </section>
+      </aside>
+    </div>
   </main>
 
   <footer class="footer">
@@ -57,6 +105,6 @@
   <script src="js/icons.js"></script>
   <script src="js/api.js"></script>
   <script src="js/busca-live.js"></script>
-  <script src="js/watch.js"></script>
+  <script src="js/watch.js?v=7"></script>
 </body>
 </html>

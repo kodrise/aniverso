@@ -20,11 +20,6 @@ function assistidos(slug) {
   }
 }
 
-function metaLinha(anime) {
-  const audio = (anime.audio ?? []).join(', ');
-  return [anime.ano, anime.tipo, audio, anime.status].filter(Boolean).join(' · ');
-}
-
 function hrefWatch(slug, numero) {
   return `/watch.html?slug=${encodeURIComponent(slug)}&ep=${encodeURIComponent(numero)}`;
 }
@@ -35,57 +30,120 @@ function generosPills(generos) {
     .join('');
 }
 
-function renderDetalhe(anime) {
-  const capa = anime.capa
-    ? `<img class="capa" src="${escapar(anime.capa)}" alt="" onerror="this.style.visibility='hidden'">`
-    : '<img class="capa" alt="">';
+function metaHTML(anime) {
+  const partes = [];
 
-  const sinopse = anime.sinopse ? `<p class="sinopse">${escapar(anime.sinopse)}</p>` : '';
-
-  const semEpisodios = anime.episodes_count === 0 || !(anime.episodios ?? []).length;
-
-  const primeiroDisponivel = (anime.episodios || []).find((ep) => ep.status !== 'dead')?.numero || 1;
-
-  const acao = semEpisodios
-    ? `<p class="aviso">${icone('info')} Episódios ainda não disponíveis</p>`
-    : `<a class="btn-assistir" href="${hrefWatch(anime.slug, primeiroDisponivel)}">${icone('play')} Assistir Ep ${escapar(primeiroDisponivel)}</a>`;
-
-  document.getElementById('detalhe').innerHTML = `<div class="detalhe-wrap">
-      ${capa}
-      <div>
-        <h1 class="page-title">${escapar(anime.titulo)}</h1>
-        <div class="meta-linha">${escapar(metaLinha(anime))}</div>
-        <div class="generos-pills">${generosPills(anime.generos)}</div>
-        ${sinopse}
-        ${acao}
-      </div>
-    </div>`;
-}
-
-function epBotao(anime, episodio, vistos) {
-  const status = ANIME_STATUS.includes(episodio.status) ? episodio.status : 'unknown';
-  const visto = vistos.has(Number(episodio.numero));
-  const classes = ['ep-btn', status, visto ? 'watched' : ''].filter(Boolean).join(' ');
-  const rotulo = `${visto ? icone('check') : ''}Ep ${escapar(episodio.numero)}`;
-
-  if (status === 'dead') {
-    return `<span class="${classes}" title="Episódio indisponível">${rotulo}</span>`;
+  if (anime.nota) {
+    partes.push(`<span class="nota">${icone('star')} ${escapar(Number(anime.nota).toFixed(1))}</span>`);
   }
 
-  return `<a class="${classes}" data-ep="${escapar(episodio.numero)}" href="${hrefWatch(anime.slug, episodio.numero)}">${rotulo}</a>`;
+  if (anime.tipo) partes.push(`<span>${escapar(anime.tipo)}</span>`);
+  if (anime.ano) partes.push(`<span>${escapar(anime.ano)}</span>`);
+
+  if (anime.status) {
+    partes.push(`<span class="status"><span class="status-dot"></span>${escapar(anime.status)}</span>`);
+  }
+
+  return partes.join('');
+}
+
+function renderDetalhe(anime) {
+  const capa = document.getElementById('capa');
+
+  if (anime.capa) {
+    capa.src = anime.capa;
+    capa.onerror = () => { capa.style.visibility = 'hidden'; };
+  }
+
+  document.getElementById('titulo').textContent = anime.titulo;
+  document.getElementById('meta').innerHTML = metaHTML(anime);
+  document.getElementById('generos').innerHTML = generosPills(anime.generos);
+
+  const sinopse = document.getElementById('sinopse');
+
+  if (anime.sinopse) {
+    sinopse.textContent = anime.sinopse;
+  } else {
+    sinopse.hidden = true;
+  }
+}
+
+function renderAssistir(anime) {
+  const btn = document.getElementById('btn-assistir');
+  const primeiro = (anime.episodios ?? []).find((episodio) => episodio.status !== 'dead');
+
+  if (!primeiro) {
+    btn.hidden = true;
+
+    const aviso = document.createElement('p');
+    aviso.className = 'aviso';
+    aviso.innerHTML = `${icone('info')} Episódios ainda não disponíveis`;
+    btn.insertAdjacentElement('afterend', aviso);
+    return;
+  }
+
+  btn.href = hrefWatch(anime.slug, primeiro.numero);
+  btn.innerHTML = `${icone('play')} Assistir Ep ${escapar(primeiro.numero)}`;
+}
+
+function epCard(anime, episodio, vistos) {
+  const status = ANIME_STATUS.includes(episodio.status) ? episodio.status : 'unknown';
+  const visto = vistos.has(Number(episodio.numero));
+  const classes = ['ep-card', status === 'dead' ? 'dead' : '', visto ? 'watched' : ''].filter(Boolean).join(' ');
+  const numero = escapar(episodio.numero);
+  const thumbSrc = episodio.thumb || anime.capa;
+  const img = thumbSrc
+    ? `<img src="${escapar(thumbSrc)}" alt="" loading="lazy" decoding="async">`
+    : '';
+
+  const nomeReal = episodio.episode_name || episodio.titulo;
+  const generico = !nomeReal || /^Ep(is[oó]dio)?\s*\d+$/i.test(nomeReal);
+  const tituloHtml = generico
+    ? ''
+    : `<div class="ep-card-titulo${nomeReal.length <= 15 ? ' curto' : ''}">${escapar(nomeReal)}</div>`;
+  const bodyCls = generico ? 'ep-card-body sem-titulo' : 'ep-card-body';
+
+  const miolo = `<div class="ep-card-thumb">
+        ${img}
+        <span class="ep-card-num">EP ${numero}</span>
+        <span class="ep-card-status ${status}"></span>
+      </div>
+      <div class="${bodyCls}">
+        ${tituloHtml}
+      </div>`;
+
+  if (status === 'dead') {
+    return `<span class="${classes}" title="Episódio indisponível">${miolo}</span>`;
+  }
+
+  return `<a class="${classes}" data-ep="${numero}" href="${hrefWatch(anime.slug, episodio.numero)}">${miolo}</a>`;
 }
 
 function renderEpisodios(anime) {
-  const lista = document.getElementById('eps-list');
+  const lista = document.getElementById('eps');
+  const contagem = document.getElementById('eps-contagem');
   const episodios = anime.episodios ?? [];
 
   if (!episodios.length) {
+    contagem.textContent = '';
     lista.innerHTML = '<p class="vazio">Nenhum episódio disponível</p>';
     return;
   }
 
+  contagem.textContent = episodios.length === 1 ? '1 episódio' : `${episodios.length} episódios`;
+
   const vistos = new Set(assistidos(anime.slug));
-  lista.innerHTML = episodios.map((episodio) => epBotao(anime, episodio, vistos)).join('');
+  lista.innerHTML = episodios.map((episodio) => epCard(anime, episodio, vistos)).join('');
+}
+
+function mostrarErro(texto) {
+  document.querySelector('.anime-hero')?.remove();
+  document.getElementById('episodios-section')?.remove();
+
+  const vazio = document.createElement('p');
+  vazio.className = 'vazio';
+  vazio.textContent = texto;
+  document.querySelector('.voltar').insertAdjacentElement('afterend', vazio);
 }
 
 async function preaquecerEpisodio(slug, numero) {
@@ -112,14 +170,14 @@ async function preaquecerPlayer(anime) {
 }
 
 function preaquecerNoHover(slug) {
-  document.querySelectorAll('.ep-btn:not(.dead)').forEach((btn) => {
+  document.querySelectorAll('.ep-card:not(.dead)').forEach((card) => {
     const aquecer = () => {
-      const numero = btn.dataset.ep;
+      const numero = card.dataset.ep;
       if (numero) preaquecerEpisodio(slug, numero).catch(() => {});
     };
 
-    btn.addEventListener('mouseenter', aquecer, { once: true });
-    btn.addEventListener('focus', aquecer, { once: true });
+    card.addEventListener('mouseenter', aquecer, { once: true });
+    card.addEventListener('focus', aquecer, { once: true });
   });
 }
 
@@ -143,20 +201,20 @@ async function carregarAnime() {
   }
 
   if (typeof AniversoAPI === 'undefined') {
-    document.getElementById('detalhe').innerHTML = `<p class="vazio">${ANIME_TEXTO_ERRO}</p>`;
+    mostrarErro(ANIME_TEXTO_ERRO);
     return;
   }
 
   const anime = await AniversoAPI.anime(slug);
 
   if (!anime) {
-    document.getElementById('detalhe').innerHTML = `<p class="vazio">${ANIME_TEXTO_ERRO}</p>`;
-    document.getElementById('episodios-section').hidden = true;
+    mostrarErro(ANIME_TEXTO_ERRO);
     return;
   }
 
   document.title = `${anime.titulo} — Aniverso`;
   renderDetalhe(anime);
+  renderAssistir(anime);
   renderEpisodios(anime);
 
   preaquecerPlayer(anime);

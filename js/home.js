@@ -75,7 +75,8 @@ function reduzirCard(anime) {
     titulo: anime.titulo,
     capa: anime.capa,
     ano: anime.ano,
-    episodes_count: anime.episodes_count
+    episodes_count: anime.episodes_count,
+    audio: anime.audio
   };
 }
 
@@ -114,9 +115,16 @@ function tempoRelativo(iso) {
   return `${Math.floor(dias / 30)}m atrás`;
 }
 
+function rotuloAudio(valor) {
+  if (valor === 'dublado' || valor === 'ptBr') return { classe: 'dublado', label: 'Dublado' };
+  if (valor === 'legendado' || valor === 'jap') return { classe: 'legendado', label: 'Legendado' };
+  return null;
+}
+
 function cardHTML(anime) {
   const capa = anime.capa ? ` src="${escapar(anime.capa)}"` : '';
   const partes = [];
+  const audio = rotuloAudio((anime.audio ?? [])[0]);
 
   if (anime.episodes_count === 1) partes.push('1 episódio');
   else if (anime.episodes_count > 1) partes.push(`${anime.episodes_count} episódios`);
@@ -126,7 +134,10 @@ function cardHTML(anime) {
   const meta = partes.join(' · ');
 
   return `<a href="/anime.html?slug=${encodeURIComponent(anime.slug)}" class="card">
-      <img${capa} alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="card-thumb">
+        <img${capa} alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+        ${audio ? `<span class="card-badge ${audio.classe}">${audio.label}</span>` : ''}
+      </div>
       <div class="info">
         <div class="titulo">${escapar(anime.titulo)}</div>
         <div class="meta">${escapar(meta)}</div>
@@ -135,15 +146,15 @@ function cardHTML(anime) {
 }
 
 function epCardHTML(card) {
-  const badge = card.audio
-    ? `<span class="ep-card-badge ${escapar(card.audio)}">${card.audio === 'dublado' ? 'Dublado' : 'Legendado'}</span>`
-    : '';
-  const capa = card.capa ? ` src="${escapar(card.capa)}"` : '';
+  const audio = rotuloAudio(card.audio);
+  const badge = audio ? `<span class="ep-card-badge ${audio.classe}">${audio.label}</span>` : '';
+  const thumbSrc = card.thumb || card.capa;
+  const img = thumbSrc ? `<img src="${escapar(thumbSrc)}" alt="" loading="lazy" decoding="async">` : '';
 
   return `<a class="ep-card" href="/watch.html?slug=${encodeURIComponent(card.slug)}&ep=${encodeURIComponent(card.numero)}"
       data-slug="${escapar(card.slug)}" data-ep="${escapar(card.numero)}">
       <div class="ep-card-thumb">
-        <img${capa} alt="" loading="lazy">
+        ${img}
         ${badge}
         <span class="ep-card-num">Episódio ${escapar(card.numero)}</span>
       </div>
@@ -407,19 +418,24 @@ async function carregarNovosEpisodios() {
       const dados = await AniversoAPI.animes({ ano_min: 2024, ordem: 'ano', desc: true, per_page: 20 });
       if (!dados) return null;
 
-      const candidatos = aproveitaveis(dados).slice(0, HOME_NOVOS_CARDS);
+      const candidatos = aproveitaveis(dados).slice(0, HOME_NOVOS_CARDS + 4);
       const detalhes = await Promise.all(candidatos.map((anime) => AniversoAPI.anime(anime.slug)));
 
       return detalhes
         .filter((anime) => anime && (anime.episodios ?? []).length)
-        .map((anime) => ({
-          slug: anime.slug,
-          titulo: anime.titulo,
-          capa: anime.capa,
-          audio: (anime.audio ?? [])[0],
-          numero: anime.episodios.at(-1).numero,
-          scraped_at: anime.scraped_at
-        }));
+        .slice(0, HOME_NOVOS_CARDS)
+        .map((anime) => {
+          const ultimoEp = anime.episodios.at(-1);
+          return {
+            slug: anime.slug,
+            titulo: anime.titulo,
+            capa: anime.capa,
+            thumb: ultimoEp.thumb,
+            audio: ultimoEp.audio,
+            numero: ultimoEp.numero,
+            scraped_at: anime.scraped_at
+          };
+        });
     });
 
     if (eps === null) {
@@ -440,7 +456,7 @@ async function carregarNovosEpisodios() {
   }
 }
 
-async function carregarGrid(elementoId, chave, params, limite) {
+async function carregarGrid(elementoId, chave, params, limite, opcional = false) {
   const alvo = document.getElementById(elementoId);
 
   try {
@@ -462,6 +478,11 @@ async function carregarGrid(elementoId, chave, params, limite) {
     }
 
     if (!lista.length) {
+      if (opcional) {
+        const secao = alvo.closest('.secao');
+        if (secao) secao.hidden = true;
+        return;
+      }
       vazio(alvo, HOME_TEXTO_VAZIO);
       return;
     }
@@ -485,10 +506,19 @@ function carregarSecaoDublados() {
   return carregarGrid('grid-dub', 'dublados', { per_page: 24, audio: 'dublado' }, 12);
 }
 
+function carregarSecaoFilmes() {
+  return carregarGrid('grid-filmes', 'filmes', { tipo: 'Filme', per_page: 60, ordem: 'nota', desc: true }, 12, true);
+}
+
 async function carregarHome() {
   await Promise.all([carregarHero(), carregarNovosEpisodios()]);
 
-  return adiar(() => Promise.all([carregarSecaoRecentes(), carregarSecaoTop(), carregarSecaoDublados()]));
+  return adiar(() => Promise.all([
+    carregarSecaoRecentes(),
+    carregarSecaoTop(),
+    carregarSecaoFilmes(),
+    carregarSecaoDublados()
+  ]));
 }
 
 function ligarBusca() {
