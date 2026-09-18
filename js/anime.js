@@ -268,12 +268,6 @@ function renderEpisodios(anime) {
     const podeExpandir = !buscando && episodios.length > ANIME_EPS_INICIAIS;
     verMais.hidden = !podeExpandir;
     verMais.textContent = expandido ? 'Ver menos' : `Ver todos (${episodios.length})`;
-
-    const contagem = document.getElementById('eps-contagem');
-    if (contagem) {
-      const total = episodios.length;
-      contagem.textContent = `${total} ${total === 1 ? 'episódio' : 'episódios'}`;
-    }
   };
 
   verMais?.addEventListener('click', () => {

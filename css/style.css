@@ -958,7 +958,7 @@ svg.ico[stroke] {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 16px;
 }
 .eps-filtro input {
@@ -966,10 +966,12 @@ svg.ico[stroke] {
   width: 100%;
   height: 36px;
   padding: 0 14px;
+  margin: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   font-size: 13px;
+  line-height: normal;
   color: var(--text);
 }
 .eps-filtro input::placeholder { color: var(--muted); }
@@ -978,19 +980,12 @@ svg.ico[stroke] {
 .eps-filtro-linha {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
+  margin-top: 0;
   flex-wrap: nowrap;
 }
-.eps-filtro-linha .eps-contagem {
-  flex: 1;
-  min-width: 0;
-  text-align: right;
-  font-size: 12px;
-  color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+.eps-filtro .eps-ordem { position: static; }
 
 /* desktop: tudo numa linha só */
 @media (min-width: 640px) {
@@ -1831,6 +1826,16 @@ svg.ico[stroke] {
 
 .eps-rail::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
+}
+
+.secao-sugestoes {
+  margin-top: 40px;
+  border-top: 1px solid var(--border);
+  padding-top: 32px;
+}
+
+@media (min-width: 700px) {
+  .secao-sugestoes { margin-top: 56px; }
 }
 
 .eps-rail .ep-card {
