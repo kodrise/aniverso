@@ -117,10 +117,10 @@ const WATCH_EPS_LIMITE = 5;
 
 function escapar(valor) {
   return String(valor)
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/"/g, '"');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function hrefWatch(slug, numero) {
