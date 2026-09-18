@@ -796,6 +796,11 @@ svg.ico[stroke] {
   gap: 8px;
 }
 
+/* secção de episódios: cola às sugestões em vez de abrir um espaço grande */
+#episodios-section {
+  margin-bottom: 24px;
+}
+
 /* lista sequencial de episódios: [1] thumb título */
 .ep-lista {
   display: flex;
@@ -1132,7 +1137,7 @@ svg.ico[stroke] {
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1 1 auto;
-  min-height: 120px;
+  min-height: 0;
   max-height: calc(100vh - 200px);
   padding-right: 6px;
   padding-bottom: 0;
@@ -1829,13 +1834,13 @@ svg.ico[stroke] {
 }
 
 .secao-sugestoes {
-  margin-top: 24px;
+  margin-top: 16px;
   border-top: 1px solid var(--border);
-  padding-top: 32px;
+  padding-top: 20px;
 }
 
 @media (min-width: 700px) {
-  .secao-sugestoes { margin-top: 40px; }
+  .secao-sugestoes { margin-top: 24px; }
 }
 
 .eps-rail .ep-card {
