@@ -962,11 +962,14 @@ svg.ico[stroke] {
   gap: 12px;
   margin-bottom: 16px;
 }
+/* #eps-busca: altura fixa e exata */
+#eps-busca,
 .eps-filtro input {
   flex: 1;
   width: 100%;
-  height: 60px;
+  height: 48px;
   padding: 0 24px;
+  box-sizing: border-box;
   margin: 0;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -975,7 +978,12 @@ svg.ico[stroke] {
   line-height: normal;
   color: var(--text);
 }
+
+#eps-busca::placeholder,
+.eps-filtro input::placeholder {
+#eps-busca::placeholder,
 .eps-filtro input::placeholder { color: var(--muted); }
+#eps-busca:focus,
 .eps-filtro input:focus { outline: none; border-color: var(--accent); }
 
 .eps-filtro-linha {
