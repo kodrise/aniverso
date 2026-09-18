@@ -941,7 +941,7 @@ svg.ico[stroke] {
 
 .eps-ver-mais {
   flex-shrink: 0;
-  height: 40px;
+  height: 48px;
   padding: 0 18px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -962,21 +962,22 @@ svg.ico[stroke] {
   gap: 12px;
   margin-bottom: 16px;
 }
-.eps-filtro input {
+.eps-filtro #eps-busca {
   flex: 1;
   width: 100%;
-  height: 60px;
-  padding: 0 24px;
+  height: 48px;
+  padding: 0 20px;
   margin: 0;
+  box-sizing: border-box;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  font-size: 16px;
-  line-height: normal;
+  font-size: 14.5px;
+  line-height: 48px;
   color: var(--text);
 }
-.eps-filtro input::placeholder { color: var(--muted); }
-.eps-filtro input:focus { outline: none; border-color: var(--accent); }
+.eps-filtro #eps-busca::placeholder { color: var(--muted); }
+.eps-filtro #eps-busca:focus { outline: none; border-color: var(--accent); }
 
 .eps-filtro-linha {
   display: flex;
@@ -992,10 +993,10 @@ svg.ico[stroke] {
 @media (min-width: 640px) {
   .eps-filtro {
     flex-direction: row;
-    align-items: center;
+    align-items: stretch;
     gap: 12px;
   }
-  .eps-filtro input { max-width: 320px; }
+  .eps-filtro #eps-busca { max-width: 320px; }
   .eps-filtro-linha { flex-wrap: nowrap; }
 }
 .eps-filtro-linha #eps-ver-mais { margin-left: auto; }
@@ -1101,7 +1102,7 @@ svg.ico[stroke] {
 .eps-toggle {
   flex-shrink: 0;
   margin-left: auto;
-  height: 40px;
+  height: 48px;
   padding: 0 18px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1121,7 +1122,7 @@ svg.ico[stroke] {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 40px;
+  height: 48px;
   padding: 0 16px;
   background: var(--surface);
   border: 1px solid var(--border);
