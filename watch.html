@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=41">
+  <link rel="stylesheet" href="css/style.css?v=49">
 </head>
 <body>
   <header class="header">
@@ -28,11 +28,6 @@
   </header>
 
   <main class="watch">
-    <a class="watch-voltar" id="voltar" href="/">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-      Voltar
-    </a>
-
     <header class="watch-head">
       <div class="watch-head-linha">
         <h1 class="watch-titulo" id="titulo"></h1>
@@ -81,7 +76,6 @@
           </div>
         </div>
 
-        <div class="watch-meta" id="watch-meta"></div>
       </div>
 
       <aside class="watch-side">
@@ -89,12 +83,23 @@
           <h2 class="watch-eps-titulo">Episódios</h2>
           <div class="eps-filtro">
             <input type="search" id="eps-busca" placeholder="Buscar episódio..." autocomplete="off" aria-label="Buscar episódio">
-            <span class="eps-contagem" id="eps-contagem"></span>
+            <button type="button" class="eps-ordem" id="eps-ordem" aria-label="Mudar ordem">
+              <span class="eps-ordem-ico">↑</span>
+              <span class="eps-ordem-txt">1-N</span>
+            </button>
+            <button type="button" class="eps-toggle" id="eps-toggle">Ver todos</button>
           </div>
           <div class="watch-eps-lista" id="eps"></div>
         </section>
       </aside>
     </div>
+
+    <section class="secao secao-sugestoes" id="sugestoes-section" hidden>
+      <header class="secao-head">
+        <h2 class="secao-titulo">Você também pode gostar</h2>
+      </header>
+      <div class="grid" id="sugestoes"></div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -110,6 +115,6 @@
   <script src="js/api.js?v=5"></script>
   <script src="js/busca-live.js"></script>
   <script src="js/skeleton.js"></script>
-  <script src="js/watch.js?v=12"></script>
+  <script src="js/watch.js?v=15"></script>
 </body>
 </html>

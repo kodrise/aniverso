@@ -144,12 +144,12 @@ function montarPaginacao(pagina, totalPaginas, filtros) {
   }
 
   const anterior = pagina > 1
-    ? linkPagina(pagina - 1, filtros, '← Anterior')
-    : '<span class="disabled">← Anterior</span>';
+    ? linkPagina(pagina - 1, filtros, 'Anterior')
+    : '<span class="disabled">Anterior</span>';
 
   const proximo = pagina < totalPaginas
-    ? linkPagina(pagina + 1, filtros, 'Próximo →')
-    : '<span class="disabled">Próximo →</span>';
+    ? linkPagina(pagina + 1, filtros, 'Próximo')
+    : '<span class="disabled">Próximo</span>';
 
   alvo.innerHTML = `${anterior}
     <span class="pagina-atual">Página ${pagina} de ${totalPaginas}</span>

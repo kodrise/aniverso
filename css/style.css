@@ -46,7 +46,7 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -60,7 +60,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 img {
@@ -110,10 +110,11 @@ ol {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: rgba(13, 13, 15, 0.82);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  backdrop-filter: blur(14px) saturate(140%);
+  background: rgba(13, 13, 15, 0.55);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(140%);
   border-bottom: 1px solid var(--border);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
 }
 
 .logo {
@@ -209,6 +210,16 @@ ol {
   outline: none;
   border-color: var(--accent);
   background: var(--surface-2);
+}
+
+/* esconde o botão "clear" (X) nativo do input search em Android/iOS */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
 }
 
 .busca-drop {
@@ -314,6 +325,11 @@ svg.ico[stroke] {
   max-width: var(--largura);
   margin: 0 auto;
   padding: 24px 16px 48px;
+}
+
+/* detalhe do anime: hero colado no header fixo, sem faixa vazia */
+.anime-page {
+  padding-top: 0;
 }
 
 .secao {
@@ -632,9 +648,10 @@ svg.ico[stroke] {
   gap: 32px;
   min-height: 440px;
   padding: 24px 32px;
+  margin-top: 0;
   margin-bottom: 40px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: 0 var(--radius-md) var(--radius-md) var(--radius-md);
   background: var(--surface);
 }
 
@@ -645,7 +662,7 @@ svg.ico[stroke] {
   background-image: var(--hero-capa, none);
   background-size: cover;
   background-position: center;
-  filter: blur(48px) brightness(0.35) saturate(1.2);
+  filter: blur(48px) brightness(0.5) saturate(1.4);
   transform: scale(1.15);
   z-index: 0;
 }
@@ -853,11 +870,30 @@ svg.ico[stroke] {
     grid-template-columns: 1fr;
     gap: 20px;
     min-height: 300px;
-    padding: 20px;
+    padding: 20px 16px;
+    margin: 0 -16px;
+    border: none;
+    border-radius: 0;
   }
 
   .anime-capa {
-    max-width: 140px;
+    width: 180px;
+    max-width: 180px;
+    justify-self: start;
+  }
+
+  .anime-info {
+    width: 100%;
+  }
+
+  .anime-meta {
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .anime-meta-pill {
+    font-size: 11.5px;
+    padding: 3px 8px;
   }
 
   .anime-titulo {
@@ -970,19 +1006,6 @@ svg.ico[stroke] {
   padding: 16px 16px 60px;
 }
 
-.watch-voltar {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--muted);
-  text-decoration: none;
-  margin-bottom: 16px;
-  transition: color 0.15s var(--ease);
-}
-.watch-voltar:hover { color: var(--text); }
-.watch-voltar .ico { width: 14px; height: 14px; }
-
 .watch-head {
   margin-bottom: 16px;
   min-height: 52px;
@@ -1049,10 +1072,46 @@ svg.ico[stroke] {
   min-width: 0;
 }
 
-/* busca + contagem só na lista vertical do desktop */
+/* busca + toggle de episódios valem em qualquer largura */
 .watch-side .eps-filtro {
-  display: none;
+  display: flex;
 }
+
+.eps-toggle {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease), color 0.15s var(--ease);
+}
+.eps-toggle:hover,
+.eps-toggle:focus,
+.eps-toggle.ativo { border-color: var(--accent); outline: none; }
+
+.eps-ordem {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease);
+}
+.eps-ordem:hover,
+.eps-ordem:focus { border-color: var(--accent); outline: none; }
+.eps-ordem-ico { font-size: 14px; font-weight: 700; }
 
 .watch-side .watch-eps-lista {
   display: flex;
@@ -1084,43 +1143,35 @@ svg.ico[stroke] {
   font-size: 13.5px;
 }
 
-@media (min-width: 1025px) {
-  .watch-side .eps-filtro {
-    display: flex;
-  }
-}
-
+/* mobile: mesma lista vertical, compacta — a página inteira já rola */
 @media (max-width: 1024px) {
   .watch-layout {
     grid-template-columns: minmax(0, 1fr);
   }
   .watch-side .watch-eps-lista {
-    flex-direction: row;
-    align-items: flex-start;
-    overflow-x: auto;
-    overflow-y: hidden;
     max-height: none;
-    scroll-snap-type: x mandatory;
   }
-  /* rail horizontal mantém o mesmo flex row da página de detalhe: pill | thumb | título | visto */
   .watch-side .ep-lista {
-    flex: 0 0 220px;
     gap: 8px;
-    padding: 8px 10px;
-    scroll-snap-align: start;
+  }
+  .watch-side .ep-lista-num {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    font-size: 12px;
   }
   .watch-side .ep-lista-thumb {
-    width: 64px;
+    width: 72px;
   }
-  .watch-side .ep-lista-body {
-    padding: 0;
+  .watch-side .ep-lista-titulo {
+    font-size: 13px;
   }
 }
 
 .watch-player {
   width: 100%;
   min-width: 0;
-  margin-bottom: 36px;
+  margin-bottom: 16px;
 }
 
 /* container do player — teto rígido */
@@ -1372,89 +1423,7 @@ svg.ico[stroke] {
 }
 .watch-btn-primary:hover { filter: brightness(1.1); border-color: var(--accent); }
 
-.watch-eps { margin-top: 40px; }
-
-/* meta do anime: preenche o espaço entre player e lista */
-.watch-meta {
-  width: 100%;
-  min-width: 0;
-  margin-top: 0;
-}
-.watch-meta-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.watch-meta-chip {
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 5px 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  color: var(--muted);
-  white-space: nowrap;
-}
-.watch-meta-chip.meta {
-  color: #b9b9c0;
-}
-.watch-meta-chip.audio-dub {
-  background: rgba(34, 197, 94, 0.12);
-  border-color: rgba(34, 197, 94, 0.35);
-  color: #4ade80;
-}
-.watch-meta-chip.audio-leg {
-  background: rgba(37, 99, 235, 0.12);
-  border-color: rgba(37, 99, 235, 0.35);
-  color: #93c5fd;
-}
-.watch-meta-chip.genero {
-  background: transparent;
-  border-color: rgba(221, 51, 51, 0.3);
-  color: #f0a0a0;
-  font-weight: 500;
-  transition: border-color 0.15s var(--ease), color 0.15s var(--ease), background-color 0.15s var(--ease);
-}
-.watch-meta-chip.genero:hover {
-  background: var(--surface);
-  border-color: var(--border);
-  color: var(--muted);
-}
-
-.watch-meta-sinopse {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #c9c9c9;
-  max-width: 68ch;
-}
-.watch-meta-sinopse.clamp {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent);
-  mask-image: linear-gradient(180deg, #000 55%, transparent);
-}
-.watch-meta-sinopse.clamp.expandido {
-  -webkit-line-clamp: initial;
-  line-clamp: initial;
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-.watch-meta-mais {
-  margin-top: 8px;
-  background: none;
-  border: 0;
-  padding: 4px 0;
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.watch-meta-mais:hover { filter: brightness(1.15); }
+.watch-eps { margin-top: 20px; }
 
 .watch-eps-titulo {
   font-size: 16px;

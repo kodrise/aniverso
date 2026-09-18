@@ -4,6 +4,104 @@ const WATCH_TEXTO_SEM_EPS = 'Nenhum episódio disponível';
 const WATCH_STATUS = ['alive', 'dead', 'unknown'];
 const WATCH_LOADING_MAX = 8000;
 const WATCH_VIDEO_TIMEOUT = 7000;
+const WATCH_ORDEM_CHAVE = 'aniverso_eps_ordem';
+
+function lerOrdemEps() {
+  try {
+    return localStorage.getItem(WATCH_ORDEM_CHAVE) === 'desc' ? 'desc' : 'asc';
+  } catch (erro) {
+    return 'asc';
+  }
+}
+
+function salvarOrdemEps(ordem) {
+  try {
+    localStorage.setItem(WATCH_ORDEM_CHAVE, ordem);
+  } catch (erro) {
+    console.error('[Aniverso] não consegui salvar a ordem dos episódios', erro);
+  }
+}
+
+function ordemEpsAsc() {
+  return lerOrdemEps() === 'asc';
+}
+
+function atualizarBotaoOrdem() {
+  const botao = document.getElementById('eps-ordem');
+  if (!botao) return;
+
+  const asc = ordemEpsAsc();
+  botao.querySelector('.eps-ordem-ico').textContent = asc ? '↑' : '↓';
+  botao.querySelector('.eps-ordem-txt').textContent = asc ? '1-N' : 'N-1';
+  botao.setAttribute('aria-label', asc ? 'Mudar para ordem decrescente' : 'Mudar para ordem crescente');
+}
+
+function rotuloAudio(valor) {
+  if (valor === 'dublado' || valor === 'ptBr') return { classe: 'dublado', label: 'Dublado' };
+  if (valor === 'legendado' || valor === 'jap') return { classe: 'legendado', label: 'Legendado' };
+  return null;
+}
+
+function cardSugestaoHTML(anime) {
+  const capa = anime.capa ? ` src="${escapar(anime.capa)}"` : '';
+  const partes = [];
+  const audio = rotuloAudio((anime.audio ?? [])[0]);
+
+  if (anime.episodes_count === 1) partes.push('1 episódio');
+  else if (anime.episodes_count > 1) partes.push(`${anime.episodes_count} episódios`);
+
+  if (anime.ano) partes.push(anime.ano);
+
+  return `<a href="/anime?slug=${encodeURIComponent(anime.slug)}" class="card">
+      <div class="card-thumb">
+        <img${capa} alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+        ${audio ? `<span class="card-badge ${audio.classe}">${audio.label}</span>` : ''}
+      </div>
+      <div class="info">
+        <div class="titulo">${escapar(anime.titulo)}</div>
+        <div class="meta">${escapar(partes.join(' · '))}</div>
+      </div>
+    </a>`;
+}
+
+async function carregarSugestoes(slug, generos) {
+  const secao = document.getElementById('sugestoes-section');
+  const grade = document.getElementById('sugestoes');
+  if (!secao || !grade || typeof AniversoAPI === 'undefined') return;
+
+  let genero = (generos ?? [])[0];
+  if (!genero) {
+    try {
+      const completo = await AniversoAPI.anime(slug);
+      genero = (completo?.generos ?? [])[0];
+    } catch (erro) {
+      console.error('[Aniverso] não consegui carregar os gêneros', erro);
+    }
+  }
+
+  if (!genero) {
+    secao.hidden = true;
+    return;
+  }
+
+  secao.hidden = false;
+  Skeleton.setGrid('sugestoes', 6);
+
+  try {
+    const dados = await AniversoAPI.animes({ genero, per_page: 13 });
+    const lista = (dados?.animes ?? []).filter((anime) => anime.slug !== slug).slice(0, 12);
+
+    if (lista.length < 4) {
+      secao.hidden = true;
+      return;
+    }
+
+    grade.innerHTML = lista.map(cardSugestaoHTML).join('');
+  } catch (erro) {
+    console.error('[Aniverso] não consegui carregar as sugestões', erro);
+    secao.hidden = true;
+  }
+}
 
 const ICONE_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
 const ICONE_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
@@ -14,6 +112,8 @@ let indiceAtual = -1;
 let embedUrlAtual = '';
 let controlsTimeout = null;
 let filtroEps = '';
+let mostrarTodos = false;
+const WATCH_EPS_LIMITE = 5;
 
 function escapar(valor) {
   return String(valor)
@@ -146,65 +246,6 @@ function pintarCabecalho() {
     sub.textContent = '';
     sub.classList.remove('ep-nome');
   }
-
-  document.getElementById('voltar').href = `/anime?slug=${encodeURIComponent(animeAtual.slug)}`;
-}
-
-function preencherMeta(anime) {
-  const meta = document.getElementById('watch-meta');
-  if (!meta) return;
-
-  const chips = [];
-  if (anime.ano) chips.push({ classe: 'meta', texto: String(anime.ano) });
-  if (anime.tipo) chips.push({ classe: 'meta', texto: anime.tipo });
-  if (anime.episodes_count) chips.push({ classe: 'meta', texto: `${anime.episodes_count} episódios` });
-
-  const audios = Array.isArray(anime.audio) ? anime.audio : (anime.audio ? [anime.audio] : []);
-  for (const audio of audios) {
-    const a = String(audio).toLowerCase();
-    if (a.includes('dub')) chips.push({ classe: 'audio-dub', texto: 'Dublado' });
-    else if (a.includes('leg')) chips.push({ classe: 'audio-leg', texto: 'Legendado' });
-  }
-
-  const generos = Array.isArray(anime.generos) ? anime.generos.slice(0, 5) : [];
-  for (const genero of generos) chips.push({ classe: 'genero', texto: genero });
-
-  const chipsHtml = chips
-    .map(c => `<span class="watch-meta-chip ${escapar(c.classe)}">${escapar(c.texto)}</span>`)
-    .join('');
-
-  let sinopse = '';
-  if (anime.sinopse) {
-    const texto = escapar(anime.sinopse);
-    if (anime.sinopse.length > 220) {
-      sinopse = `<p class="watch-meta-sinopse clamp" data-full="${texto}">${texto}</p>
-        <button class="watch-meta-mais" type="button" aria-expanded="false">Ler mais</button>`;
-    } else {
-      sinopse = `<p class="watch-meta-sinopse">${texto}</p>`;
-    }
-  }
-
-  if (!chipsHtml && !sinopse) return;
-  meta.innerHTML = (chipsHtml ? `<div class="watch-meta-chips">${chipsHtml}</div>` : '') + sinopse;
-
-  const btnMais = meta.querySelector('.watch-meta-mais');
-  const paragrafo = meta.querySelector('.watch-meta-sinopse.clamp');
-  if (btnMais && paragrafo) {
-    btnMais.addEventListener('click', () => {
-      const expandido = paragrafo.classList.toggle('expandido');
-      btnMais.textContent = expandido ? 'Ler menos' : 'Ler mais';
-      btnMais.setAttribute('aria-expanded', String(expandido));
-    });
-  }
-}
-
-async function carregarMeta(slug) {
-  try {
-    const anime = await AniversoAPI.anime(slug);
-    if (anime) preencherMeta(anime);
-  } catch (erro) {
-    console.error('[Aniverso] não consegui carregar a meta do anime', erro);
-  }
 }
 
 function epCardHTML(anime, ep, idx) {
@@ -240,20 +281,31 @@ function renderEpisodios() {
   const container = document.getElementById('eps');
   if (!container) return;
 
+  atualizarBotaoOrdem();
+
+  // se o ep atual não está nos 5 primeiros, expande a lista pra ele aparecer
+  if (!filtroEps && !mostrarTodos && indiceAtual >= WATCH_EPS_LIMITE) {
+    mostrarTodos = true;
+  }
+
   // mantém o índice original mesmo filtrando, pra não perder o .atual
   const comIndice = episodiosVivos.map((ep, i) => ({ ep, i }));
-  const visiveis = filtroEps
+  if (!ordemEpsAsc()) comIndice.reverse();
+  const filtrados = filtroEps
     ? comIndice.filter(({ ep }) => String(ep.numero).includes(filtroEps))
     : comIndice;
+  const semLimite = mostrarTodos || Boolean(filtroEps);
+  const visiveis = semLimite ? filtrados : filtrados.slice(0, WATCH_EPS_LIMITE);
 
   container.innerHTML = visiveis.length
     ? visiveis.map(({ ep, i }) => epCardHTML(animeAtual, ep, i)).join('')
     : '<p class="vazio">Nenhum episódio encontrado</p>';
 
-  const contagem = document.getElementById('eps-contagem');
-  if (contagem) {
+  const toggle = document.getElementById('eps-toggle');
+  if (toggle) {
     const total = episodiosVivos.length;
-    contagem.textContent = `${total} ${total === 1 ? 'episódio' : 'episódios'}`;
+    toggle.textContent = mostrarTodos ? 'Ver menos' : `Ver todos (${total})`;
+    toggle.classList.toggle('ativo', mostrarTodos);
   }
 
   const atual = container.querySelector('.ep-lista.atual');
@@ -266,12 +318,32 @@ function setupBuscaEps() {
 
   let debounce = null;
   busca.addEventListener('input', (e) => {
-    if (window.innerWidth <= 1024) return; // busca só na lista vertical do desktop
     clearTimeout(debounce);
     debounce = setTimeout(() => {
       filtroEps = e.target.value.trim();
       renderEpisodios();
     }, 150);
+  });
+}
+
+function setupToggleEps() {
+  const toggle = document.getElementById('eps-toggle');
+  if (!toggle) return;
+
+  toggle.addEventListener('click', () => {
+    mostrarTodos = !mostrarTodos;
+    renderEpisodios();
+  });
+}
+
+function setupOrdemEps() {
+  const botao = document.getElementById('eps-ordem');
+  if (!botao) return;
+
+  botao.addEventListener('click', () => {
+    salvarOrdemEps(ordemEpsAsc() ? 'desc' : 'asc');
+    renderEpisodios();
+    document.querySelector('.watch-eps')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 }
 
@@ -596,12 +668,15 @@ async function carregarWatch() {
   pintarCabecalho();
   renderEpisodios();
   setupBuscaEps();
+  setupToggleEps();
+  setupOrdemEps();
   ligarNavegacao();
   ligarBotoesNavegacao();
   preloadHover();
   setupVideoPlayer();
   setupFullscreen();
-  carregarMeta(anime.slug);
+
+  carregarSugestoes(animeAtual.slug, animeAtual.generos);
 
   atualizarTitulo();
   await carregarEmbed(alvo.numero);

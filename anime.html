@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=39">
+  <link rel="stylesheet" href="css/style.css?v=49">
 </head>
 <body>
   <header class="header">
@@ -27,12 +27,7 @@
     </div>
   </header>
 
-  <main class="container">
-    <a class="voltar" href="javascript:history.back()">
-      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-      Voltar
-    </a>
-
+  <main class="container anime-page">
     <section class="anime-hero">
       <img class="anime-capa" id="capa" alt="">
       <div class="anime-info">
@@ -49,9 +44,20 @@
       </header>
       <div class="eps-filtro">
         <input type="search" id="eps-busca" placeholder="Buscar episódio..." autocomplete="off" aria-label="Buscar episódio">
+        <button type="button" class="eps-ordem" id="eps-ordem" aria-label="Mudar ordem">
+          <span class="eps-ordem-ico">↑</span>
+          <span class="eps-ordem-txt">1-N</span>
+        </button>
         <button class="eps-ver-mais" id="eps-ver-mais" type="button" hidden>Ver todos</button>
       </div>
       <div class="eps-botoes" id="eps"></div>
+    </section>
+
+    <section class="secao secao-sugestoes" id="sugestoes-section" hidden>
+      <header class="secao-head">
+        <h2 class="secao-titulo">Você também pode gostar</h2>
+      </header>
+      <div class="grid" id="sugestoes"></div>
     </section>
 
     <iframe id="preload-player"
@@ -72,6 +78,6 @@
   <script src="js/api.js?v=5"></script>
   <script src="js/busca-live.js"></script>
   <script src="js/skeleton.js"></script>
-  <script src="js/anime.js?v=9"></script>
+  <script src="js/anime.js?v=11"></script>
 </body>
 </html>
