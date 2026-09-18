@@ -1082,6 +1082,10 @@ svg.ico[stroke] {
 
 .watch-side {
   min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .eps-toggle {
@@ -1127,7 +1131,8 @@ svg.ico[stroke] {
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
-  min-height: 240px;
+  flex: 1 1 auto;
+  min-height: 120px;
   max-height: calc(100vh - 200px);
   padding-right: 6px;
   padding-bottom: 0;
@@ -1432,7 +1437,13 @@ svg.ico[stroke] {
 }
 .watch-btn-primary:hover { filter: brightness(1.1); border-color: var(--accent); }
 
-.watch-eps { margin-top: 20px; }
+.watch-eps {
+  margin-top: 20px;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
 
 .watch-eps-titulo {
   font-size: 16px;
