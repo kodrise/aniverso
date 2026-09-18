@@ -941,7 +941,8 @@ svg.ico[stroke] {
 
 .eps-ver-mais {
   flex-shrink: 0;
-  padding: 8px 18px;
+  height: 40px;
+  padding: 0 18px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
@@ -964,13 +965,13 @@ svg.ico[stroke] {
 .eps-filtro input {
   flex: 1;
   width: 100%;
-  height: 36px;
-  padding: 0 14px;
+  height: 60px;
+  padding: 0 24px;
   margin: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  font-size: 13px;
+  font-size: 16px;
   line-height: normal;
   color: var(--text);
 }
@@ -1100,7 +1101,8 @@ svg.ico[stroke] {
 .eps-toggle {
   flex-shrink: 0;
   margin-left: auto;
-  padding: 8px 16px;
+  height: 40px;
+  padding: 0 18px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
@@ -1119,7 +1121,8 @@ svg.ico[stroke] {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  height: 40px;
+  padding: 0 16px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
@@ -1131,7 +1134,7 @@ svg.ico[stroke] {
 }
 .eps-ordem:hover,
 .eps-ordem:focus { border-color: var(--accent); outline: none; }
-.eps-ordem-ico { font-size: 14px; font-weight: 700; }
+.eps-ordem-ico { font-size: 16px; font-weight: 800; }
 
 .watch-side .watch-eps-lista {
   display: flex;
@@ -1829,13 +1832,13 @@ svg.ico[stroke] {
 }
 
 .secao-sugestoes {
-  margin-top: 40px;
+  margin-top: 24px;
   border-top: 1px solid var(--border);
   padding-top: 32px;
 }
 
 @media (min-width: 700px) {
-  .secao-sugestoes { margin-top: 56px; }
+  .secao-sugestoes { margin-top: 40px; }
 }
 
 .eps-rail .ep-card {
@@ -2361,6 +2364,34 @@ svg.ico[stroke] {
   }
   .sk::before { opacity: 0.5; }
   .sk::after { background: rgba(255, 255, 255, 0.045); }
+}
+
+/* stagger: cada 4º placeholder shimm em ponto diferente do ciclo */
+.sk-card:nth-child(4n + 2) .sk::before,
+.sk-card:nth-child(4n + 2) .sk::after,
+.sk-ep-card:nth-child(4n + 2) .sk::before,
+.sk-ep-card:nth-child(4n + 2) .sk::after,
+.sk-ep-inline:nth-child(4n + 2) .sk::before,
+.sk-ep-inline:nth-child(4n + 2) .sk::after {
+  animation-delay: -0.1s;
+}
+
+.sk-card:nth-child(4n + 3) .sk::before,
+.sk-card:nth-child(4n + 3) .sk::after,
+.sk-ep-card:nth-child(4n + 3) .sk::before,
+.sk-ep-card:nth-child(4n + 3) .sk::after,
+.sk-ep-inline:nth-child(4n + 3) .sk::before,
+.sk-ep-inline:nth-child(4n + 3) .sk::after {
+  animation-delay: -0.2s;
+}
+
+.sk-card:nth-child(4n + 4) .sk::before,
+.sk-card:nth-child(4n + 4) .sk::after,
+.sk-ep-card:nth-child(4n + 4) .sk::before,
+.sk-ep-card:nth-child(4n + 4) .sk::after,
+.sk-ep-inline:nth-child(4n + 4) .sk::before,
+.sk-ep-inline:nth-child(4n + 4) .sk::after {
+  animation-delay: -0.3s;
 }
 
 /* formas: capa 2/3, thumb 16/9, linha de texto, pill */

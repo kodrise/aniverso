@@ -80,6 +80,11 @@ window.Skeleton = (function () {
               <div class="sk sk-linha media"></div>
             </div>
           </div>
+        </div>
+        <div class="hero-dots" aria-hidden="true">
+          <span class="active"></span>
+          <span></span>
+          <span></span>
         </div>`;
     },
 

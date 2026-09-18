@@ -495,11 +495,22 @@ async function carregarNovosEpisodios() {
   }
 }
 
+function esconderSeOpcional(alvo, opcional) {
+  if (!opcional) return false;
+
+  const secao = alvo.closest('.secao');
+  if (secao) secao.hidden = true;
+
+  return true;
+}
+
 async function carregarGrid(elementoId, chave, params, limite, opcional = false) {
   const alvo = document.getElementById(elementoId);
+  if (!alvo) return;
 
   try {
     if (typeof AniversoAPI === 'undefined') {
+      if (esconderSeOpcional(alvo, opcional)) return;
       vazio(alvo, HOME_TEXTO_ERRO);
       return;
     }
@@ -512,16 +523,13 @@ async function carregarGrid(elementoId, chave, params, limite, opcional = false)
     });
 
     if (lista === null) {
+      if (esconderSeOpcional(alvo, opcional)) return;
       vazio(alvo, HOME_TEXTO_ERRO);
       return;
     }
 
     if (!lista.length) {
-      if (opcional) {
-        const secao = alvo.closest('.secao');
-        if (secao) secao.hidden = true;
-        return;
-      }
+      if (esconderSeOpcional(alvo, opcional)) return;
       vazio(alvo, HOME_TEXTO_VAZIO);
       return;
     }
