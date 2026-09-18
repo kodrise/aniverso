@@ -956,13 +956,14 @@ svg.ico[stroke] {
 
 .eps-filtro {
   display: flex;
-  gap: 12px;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
   margin-bottom: 16px;
 }
 .eps-filtro input {
   flex: 1;
-  max-width: 320px;
+  width: 100%;
   height: 36px;
   padding: 0 14px;
   background: var(--surface);
@@ -973,13 +974,35 @@ svg.ico[stroke] {
 }
 .eps-filtro input::placeholder { color: var(--muted); }
 .eps-filtro input:focus { outline: none; border-color: var(--accent); }
-.eps-filtro #eps-ver-mais { margin-left: auto; }
-.eps-filtro .eps-contagem {
-  margin-left: auto;
+
+.eps-filtro-linha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+.eps-filtro-linha .eps-contagem {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
   font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+/* desktop: tudo numa linha só */
+@media (min-width: 640px) {
+  .eps-filtro {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+  .eps-filtro input { max-width: 320px; }
+  .eps-filtro-linha { flex-wrap: nowrap; }
+}
+.eps-filtro-linha #eps-ver-mais { margin-left: auto; }
 
 .botao {
   display: inline-block;
@@ -1072,9 +1095,11 @@ svg.ico[stroke] {
   min-width: 0;
 }
 
-/* busca + toggle de episódios valem em qualquer largura */
+/* sidebar do watch é estreito (300px): filtro sempre em coluna */
 .watch-side .eps-filtro {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .eps-toggle {
@@ -1811,6 +1836,20 @@ svg.ico[stroke] {
 .eps-rail .ep-card {
   flex: 0 0 200px;
   scroll-snap-align: start;
+}
+
+/* sugestões: cards da home em rail horizontal */
+.eps-rail .card {
+  flex: 0 0 172px;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 700px) {
+  .eps-rail .card { flex-basis: 200px; }
+}
+
+@media (min-width: 1100px) {
+  .eps-rail .card { flex-basis: 220px; }
 }
 
 .rail-nav {

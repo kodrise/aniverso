@@ -308,6 +308,12 @@ function renderEpisodios() {
     toggle.classList.toggle('ativo', mostrarTodos);
   }
 
+  const contagem = document.getElementById('eps-contagem');
+  if (contagem) {
+    const total = episodiosVivos.length;
+    contagem.textContent = `${total} ${total === 1 ? 'episódio' : 'episódios'}`;
+  }
+
   const atual = container.querySelector('.ep-lista.atual');
   if (atual) atual.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
@@ -343,7 +349,6 @@ function setupOrdemEps() {
   botao.addEventListener('click', () => {
     salvarOrdemEps(ordemEpsAsc() ? 'desc' : 'asc');
     renderEpisodios();
-    document.querySelector('.watch-eps')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 }
 

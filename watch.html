@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=49">
+  <link rel="stylesheet" href="css/style.css?v=50">
 </head>
 <body>
   <header class="header">
@@ -83,11 +83,14 @@
           <h2 class="watch-eps-titulo">Episódios</h2>
           <div class="eps-filtro">
             <input type="search" id="eps-busca" placeholder="Buscar episódio..." autocomplete="off" aria-label="Buscar episódio">
-            <button type="button" class="eps-ordem" id="eps-ordem" aria-label="Mudar ordem">
-              <span class="eps-ordem-ico">↑</span>
-              <span class="eps-ordem-txt">1-N</span>
-            </button>
-            <button type="button" class="eps-toggle" id="eps-toggle">Ver todos</button>
+            <div class="eps-filtro-linha">
+              <button type="button" class="eps-ordem" id="eps-ordem" aria-label="Mudar ordem">
+                <span class="eps-ordem-ico">↑</span>
+                <span class="eps-ordem-txt">1-N</span>
+              </button>
+              <span class="eps-contagem" id="eps-contagem"></span>
+              <button type="button" class="eps-toggle" id="eps-toggle">Ver todos</button>
+            </div>
           </div>
           <div class="watch-eps-lista" id="eps"></div>
         </section>
@@ -98,7 +101,7 @@
       <header class="secao-head">
         <h2 class="secao-titulo">Você também pode gostar</h2>
       </header>
-      <div class="grid" id="sugestoes"></div>
+      <div class="eps-rail" id="sugestoes"></div>
     </section>
   </main>
 
@@ -115,6 +118,6 @@
   <script src="js/api.js?v=5"></script>
   <script src="js/busca-live.js"></script>
   <script src="js/skeleton.js"></script>
-  <script src="js/watch.js?v=15"></script>
+  <script src="js/watch.js?v=16"></script>
 </body>
 </html>
