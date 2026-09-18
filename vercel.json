@@ -23,15 +23,15 @@
     }
   ],
   "rewrites": [
-    { "source": "/", "destination": "/pages/index.html" },
-    { "source": "/anime", "destination": "/pages/anime.html" },
-    { "source": "/watch", "destination": "/pages/watch.html" },
-    { "source": "/busca", "destination": "/pages/busca.html" },
-    { "source": "/catalogo", "destination": "/pages/catalogo.html" },
-    { "source": "/genero", "destination": "/pages/genero.html" },
-    { "source": "/sobre", "destination": "/pages/sobre.html" },
-    { "source": "/contato", "destination": "/pages/contato.html" },
-    { "source": "/dmca", "destination": "/pages/dmca.html" },
-    { "source": "/404", "destination": "/pages/404.html" }
+    { "source": "/", "destination": "/pages" },
+    { "source": "/anime", "destination": "/pages/anime" },
+    { "source": "/watch", "destination": "/pages/watch" },
+    { "source": "/busca", "destination": "/pages/busca" },
+    { "source": "/catalogo", "destination": "/pages/catalogo" },
+    { "source": "/genero", "destination": "/pages/genero" },
+    { "source": "/sobre", "destination": "/pages/sobre" },
+    { "source": "/contato", "destination": "/pages/contato" },
+    { "source": "/dmca", "destination": "/pages/dmca" },
+    { "source": "/404", "destination": "/pages/404" }
   ]
 }
