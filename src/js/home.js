@@ -537,6 +537,7 @@ async function carregarGrid(elementoId, chave, params, limite, opcional = false)
     alvo.innerHTML = lista.map(cardHTML).join('');
   } catch (erro) {
     console.error(`[Aniverso] falha ao carregar a seção ${elementoId}`, erro);
+    if (esconderSeOpcional(alvo, opcional)) return;
     vazio(alvo, HOME_TEXTO_ERRO);
   }
 }
