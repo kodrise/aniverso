@@ -31,8 +31,8 @@ window.Skeleton = (function () {
         <div class="ep-card sk-ep-card" aria-hidden="true">
           <div class="ep-card-thumb"><div class="sk sk-thumb"></div></div>
           <div class="ep-card-body">
-            <div class="sk sk-linha"></div>
-            <div class="sk sk-linha curta"></div>
+            <div class="sk sk-linha" style="height: 36px; margin-bottom: 7px"></div>
+            <div class="sk sk-linha curta" style="height: 17px"></div>
           </div>
         </div>`);
     },
