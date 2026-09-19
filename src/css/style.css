@@ -1,3 +1,8 @@
+/* ===== Transições entre páginas (multipágina, sem SPA) ===== */
+@view-transition {
+  navigation: auto;
+}
+
 *,
 *::before,
 *::after {
@@ -115,6 +120,8 @@ ol {
   backdrop-filter: blur(20px) saturate(140%);
   border-bottom: 1px solid var(--border);
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+  /* header estático durante a transição de página */
+  view-transition-name: header;
 }
 
 .logo {
@@ -2688,6 +2695,8 @@ svg.ico[stroke] {
   border-top: 1px solid var(--border);
   z-index: 100;
   padding-bottom: env(safe-area-inset-bottom);
+  /* nav estática durante a transição: não faz parte do crossfade */
+  view-transition-name: bottom-nav;
 }
 
 .bottom-nav-item {
