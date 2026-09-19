@@ -150,6 +150,84 @@ function metaHTML(anime) {
   return partes.join('');
 }
 
+function montarCTAs(anime) {
+  const ctas = document.getElementById('ctas');
+  if (!ctas) return;
+
+  const eps = anime.episodios ?? [];
+  const vivos = eps.filter((ep) => ep.status !== 'dead');
+  const primeiro = (vivos.length ? vivos : eps)[0];
+
+  if (!primeiro) {
+    ctas.hidden = true;
+    return;
+  }
+
+  ctas.hidden = false;
+  ctas.innerHTML = `
+    <a class="btn-assistir" href="${hrefWatch(anime.slug, primeiro.numero)}">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5 19 12 7 19.5Z"/></svg>
+      Assistir Ep ${escapar(String(primeiro.numero))}
+    </a>
+    <button type="button" class="btn-fav" id="btn-fav" aria-label="Favoritar">
+      <svg class="ico coracao-vazio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 20.5S3.5 15 3.5 9.2A4.7 4.7 0 0 1 12 6.4a4.7 4.7 0 0 1 8.5 2.8c0 5.8-8.5 11.3-8.5 11.3Z"/>
+      </svg>
+      <svg class="ico coracao-cheio" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 20.5S3.5 15 3.5 9.2A4.7 4.7 0 0 1 12 6.4a4.7 4.7 0 0 1 8.5 2.8c0 5.8-8.5 11.3-8.5 11.3Z"/>
+      </svg>
+      <span class="btn-fav-txt">Favoritar</span>
+    </button>`;
+
+  ligarBotaoFav(anime);
+}
+
+async function ligarBotaoFav(anime) {
+  const botao = document.getElementById('btn-fav');
+  if (!botao) return;
+
+  const texto = botao.querySelector('.btn-fav-txt');
+
+  const definirEstado = (ativo) => {
+    botao.classList.toggle('ativo', ativo);
+    texto.textContent = ativo ? 'Favoritado' : 'Favoritar';
+  };
+
+  // estado de auth; resolve assim que o Firebase restabelece a sessão
+  const pronto = window.authPronto ?? Promise.resolve(null);
+
+  // marca como favorito (sem bloquear o clique) se já estiver salvo
+  pronto.then(async (user) => {
+    if (!user) return;
+    try {
+      if (window.Favoritos && (await window.Favoritos.verificar(anime.slug))) definirEstado(true);
+    } catch (erro) {
+      console.error('[Aniverso] não consegui verificar o favorito', erro);
+    }
+  });
+
+  botao.addEventListener('click', async () => {
+    const user = await pronto;
+
+    if (!user) {
+      const next = encodeURIComponent(location.pathname + location.search);
+      location.href = `/entrar?next=${next}`;
+      return;
+    }
+
+    botao.disabled = true;
+    try {
+      const ativo = await window.Favoritos.alternar(anime);
+      definirEstado(ativo);
+    } catch (erro) {
+      console.error('[Aniverso] erro ao alternar o favorito', erro);
+    } finally {
+      botao.disabled = false;
+    }
+  });
+}
+
 function renderDetalhe(anime) {
   const capa = document.getElementById('capa');
   const hero = document.querySelector('.anime-hero');
@@ -189,6 +267,8 @@ function renderDetalhe(anime) {
   } else {
     sinopse.hidden = true;
   }
+
+  montarCTAs(anime);
 }
 
 function epCard(anime, episodio, vistos, atual) {
@@ -339,6 +419,15 @@ function preaquecerNoHover(slug) {
 document.addEventListener('click', (evento) => {
   const link = evento.target instanceof Element && evento.target.closest('a[href^="/watch"]');
   if (!link) return;
+
+  // login obrigatório para assistir: só bloqueia quando sabemos que está deslogado
+  // (undefined = auth ainda a carregar; o /watch volta a verificar com requireAuth)
+  if (window.__user === null) {
+    evento.preventDefault();
+    const next = encodeURIComponent(link.getAttribute('href'));
+    location.href = `/entrar?next=${next}`;
+    return;
+  }
 
   try {
     sessionStorage.setItem(ANIME_CLIQUE_CHAVE, String(Date.now()));

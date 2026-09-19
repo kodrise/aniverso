@@ -627,6 +627,15 @@ async function carregarWatch() {
   const slug = params.get('slug');
   const pedido = params.has('ep') ? Number(params.get('ep')) : null;
 
+  // assistir exige login: sem sessão, requireAuth leva para /entrar?next=/watch?...
+  if (typeof window.requireAuth === 'function') {
+    const usuario = await window.requireAuth();
+    if (!usuario) return;
+  } else {
+    location.href = `/entrar?next=${encodeURIComponent(location.pathname + location.search)}`;
+    return;
+  }
+
   if (!slug) {
     window.location = '/404';
     return;

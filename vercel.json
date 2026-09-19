@@ -34,6 +34,8 @@
     { "source": "/dmca", "destination": "/pages/dmca" },
     { "source": "/entrar", "destination": "/pages/entrar" },
     { "source": "/registar", "destination": "/pages/registar" },
+    { "source": "/favoritos", "destination": "/pages/favoritos" },
+    { "source": "/perfil", "destination": "/pages/perfil" },
     { "source": "/404", "destination": "/pages/404" }
   ]
 }

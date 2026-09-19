@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d0d0f">
-  <title>Aniverso — Contato</title>
+  <title>Favoritos — Aniverso</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://streamapi-peach.vercel.app">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css?v=62">
   <script>(function(s){s.dataset.zone='11837908',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
@@ -25,20 +26,8 @@
   </header>
 
   <main class="container">
-    <h1 class="page-title">Contato</h1>
-
-    <div class="texto">
-      <p>Para sugestões de anime, episódio fora do ar, erro de catálogo ou pedido de remoção,
-      escreva para:</p>
-
-      <p><a href="mailto:contato@aniverso.example">contato@aniverso.example</a></p>
-
-      <p>Pedidos de remoção por direitos autorais devem seguir o que está descrito na página de
-      <a href="/dmca">DMCA</a>, com a URL do título e a descrição da obra.</p>
-
-      <p>Respondemos em até 48 horas úteis. Este endereço é um exemplo e deve ser trocado pelo
-      contato real antes de publicar o site.</p>
-    </div>
+    <h1 class="page-title">Favoritos</h1>
+    <div class="grid" id="grid-favoritos"></div>
   </main>
 
   <footer class="footer">
@@ -54,6 +43,9 @@
   <script src="js/busca-live.js"></script>
   <script type="module" src="/js/firebase.js"></script>
   <script type="module" src="/js/auth.js"></script>
+  <script type="module" src="/js/favs.js"></script>
   <script type="module" src="/js/bottom-nav.js"></script>
+  <script src="js/skeleton.js?v=2"></script>
+  <script type="module" src="/js/favoritos.js?v=1"></script>
 </body>
 </html>

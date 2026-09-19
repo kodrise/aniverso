@@ -7,9 +7,32 @@ function inicial(nome) {
   return (partes[0][0] + (partes[1] ? partes[1][0] : "")).toUpperCase();
 }
 
+// em mobile o utilizador migra para a aba "Perfil" da bottom nav
+const LIMITE_MOBILE = 768;
+let ultimoUser = null;
+let eraMobile = innerMobile();
+
+// resolve quando o primeiro estado de auth é conhecido (user ou null)
+let resolverAuth = null;
+window.authPronto = new Promise((resolve) => {
+  resolverAuth = resolve;
+});
+
+function innerMobile() {
+  return window.innerWidth < LIMITE_MOBILE;
+}
+
 function montarHeader(user) {
   const alvo = document.getElementById("header-user");
   if (!alvo) return;
+
+  ultimoUser = user;
+
+  // mobile: o avatar/botão Entrar vivem na bottom nav, não no header
+  if (innerMobile()) {
+    alvo.innerHTML = "";
+    return;
+  }
 
   if (!user) {
     alvo.innerHTML = '<a href="/entrar" class="btn-entrar">Entrar</a>';
@@ -55,8 +78,28 @@ function escapar(valor) {
 }
 
 export function initAuthHeader() {
-  onAuthStateChanged(auth, (user) => montarHeader(user));
+  onAuthStateChanged(auth, (user) => {
+    window.__user = user ?? null;
+    if (resolverAuth) {
+      resolverAuth(user ?? null);
+      resolverAuth = null;
+    }
+    montarHeader(user);
+  });
 }
+
+// volta a pintar o header quando a janela cruza a fronteira mobile/desktop
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  if (resizeTimer) clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const agoraMobile = innerMobile();
+    if (agoraMobile !== eraMobile) {
+      eraMobile = agoraMobile;
+      montarHeader(ultimoUser);
+    }
+  }, 150);
+});
 
 // fecha o menu ao clicar fora dele
 document.addEventListener("click", (evento) => {
@@ -80,6 +123,9 @@ export function requireAuth() {
     });
   });
 }
+
+// exposto para scripts clássicos (anime.js, watch.js) que não são módulos ES
+window.requireAuth = requireAuth;
 
 // auto-executa na carga de qualquer página que inclua este módulo
 if (document.readyState === "loading") {

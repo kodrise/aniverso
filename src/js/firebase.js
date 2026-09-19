@@ -14,4 +14,6 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// o projeto usa a base "aniverso-db" (plano grátis: uma só base, sem a (default))
+export const db = getFirestore(app, "aniverso-db");
