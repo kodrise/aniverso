@@ -1,0 +1,17 @@
+{
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Aniverso",
+        "supportEmail": "kaombodias.oficial@gmail.com"
+      }
+    }
+  },
+  "firestore": {
+    "database": "aniverso-db",
+    "location": "southamerica-east1",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}
