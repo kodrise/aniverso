@@ -1,3 +1,4 @@
+(function () {
 const BUSCA_TEXTO_VAZIO = 'Nenhum anime encontrado';
 const BUSCA_TEXTO_ERRO = 'Não foi possível carregar';
 
@@ -71,4 +72,9 @@ async function carregarBusca() {
   document.getElementById('resultados').innerHTML = animes.map(cardHTML).join('');
 }
 
-document.addEventListener('DOMContentLoaded', carregarBusca);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', carregarBusca);
+} else {
+  carregarBusca();
+}
+})();

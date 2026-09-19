@@ -1,3 +1,4 @@
+(function () {
 const GENERO_TEXTO_VAZIO = 'Nenhum anime nesse gênero';
 const GENERO_TEXTO_ERRO = 'Não foi possível carregar';
 
@@ -33,7 +34,7 @@ async function carregarGenero() {
   const nome = new URLSearchParams(window.location.search).get('nome');
 
   if (!nome) {
-    window.location = '/catalogo';
+    (window.irPara || ((u) => location.href = u))('/catalogo');
     return;
   }
 
@@ -61,4 +62,9 @@ async function carregarGenero() {
   grid.innerHTML = animes.map(cardHTML).join('');
 }
 
-document.addEventListener('DOMContentLoaded', carregarGenero);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', carregarGenero);
+} else {
+  carregarGenero();
+}
+})();

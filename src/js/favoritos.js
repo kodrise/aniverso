@@ -1,5 +1,6 @@
 import { cardHTML } from "./card.js";
 import { listar } from "./favs.js";
+import { registrarInit } from "./turbo-init.js";
 
 function mostrarVazio() {
   const alvo = document.getElementById("grid-favoritos");
@@ -41,4 +42,4 @@ async function carregarFavoritos() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", carregarFavoritos);
+registrarInit(carregarFavoritos);

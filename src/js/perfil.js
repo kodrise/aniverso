@@ -1,6 +1,8 @@
 import { auth } from "./firebase.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { contar } from "./history.js";
+import { registrarInit } from "./turbo-init.js";
+import { irPara } from "./auth.js";
 
 function inicial(nome) {
   if (!nome) return "?";
@@ -51,8 +53,8 @@ async function carregarPerfil() {
     } catch (erro) {
       console.error("[Aniverso] erro ao sair", erro);
     }
-    location.href = "/";
+    irPara("/");
   });
 }
 
-document.addEventListener("DOMContentLoaded", carregarPerfil);
+registrarInit(carregarPerfil);

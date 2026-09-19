@@ -1,3 +1,4 @@
+(function () {
 const ANIME_ASSISTIDOS_PREFIXO = 'aniverso_assistidos_';
 const ANIME_CLIQUE_CHAVE = 'aniverso_clique_assistir';
 const ANIME_TEXTO_ERRO = 'Anime não encontrado';
@@ -251,7 +252,7 @@ async function ligarBotaoFav(anime) {
 
     if (!user) {
       const next = encodeURIComponent(location.pathname + location.search);
-      location.href = `/entrar?next=${next}`;
+      (window.irPara || ((u) => location.href = u))(`/entrar?next=${next}`);
       return;
     }
 
@@ -458,31 +459,36 @@ function preaquecerNoHover(slug) {
   });
 }
 
-document.addEventListener('click', (evento) => {
-  const link = evento.target instanceof Element && evento.target.closest('a[href^="/watch"]');
-  if (!link) return;
+// click delegado nos links /watch: regista-se UMA vez (o script re-executa em
+// cada visita a /anime) para nao acumular listeners
+if (!window.__aniversoWatchClick) {
+  window.__aniversoWatchClick = true;
+  document.addEventListener('click', (evento) => {
+    const link = evento.target instanceof Element && evento.target.closest('a[href^="/watch"]');
+    if (!link) return;
 
-  // login obrigatório para assistir: só bloqueia quando sabemos que está deslogado
-  // (undefined = auth ainda a carregar; o /watch volta a verificar com requireAuth)
-  if (window.__user === null) {
-    evento.preventDefault();
-    const next = encodeURIComponent(link.getAttribute('href'));
-    location.href = `/entrar?next=${next}`;
-    return;
-  }
+    // login obrigatório para assistir: só bloqueia quando sabemos que está deslogado
+    // (undefined = auth ainda a carregar; o /watch volta a verificar com requireAuth)
+    if (window.__user === null) {
+      evento.preventDefault();
+      const next = encodeURIComponent(link.getAttribute('href'));
+      (window.irPara || ((u) => location.href = u))(`/entrar?next=${next}`);
+      return;
+    }
 
-  try {
-    sessionStorage.setItem(ANIME_CLIQUE_CHAVE, String(Date.now()));
-  } catch (erro) {
-    console.error('[Aniverso] não consegui guardar o instante do clique', erro);
-  }
-}, true);
+    try {
+      sessionStorage.setItem(ANIME_CLIQUE_CHAVE, String(Date.now()));
+    } catch (erro) {
+      console.error('[Aniverso] não consegui guardar o instante do clique', erro);
+    }
+  }, true);
+}
 
 async function carregarAnime() {
   const slug = new URLSearchParams(window.location.search).get('slug');
 
   if (!slug) {
-    window.location = '/404';
+    (window.irPara || ((u) => location.href = u))('/404');
     return;
   }
 
@@ -510,4 +516,9 @@ async function carregarAnime() {
   preaquecerNoHover(anime.slug);
 }
 
-document.addEventListener('DOMContentLoaded', carregarAnime);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', carregarAnime);
+} else {
+  carregarAnime();
+}
+})();

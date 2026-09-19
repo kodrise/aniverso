@@ -9,8 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=65">
-  <script>(function(s){s.dataset.zone='11837908',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+  <link rel="stylesheet" href="css/style.css?v=66">
   <script type="speculationrules">
     {
       "prerender": [
@@ -21,9 +20,21 @@
       ]
     }
   </script>
+  <meta name="turbo-cache-control" content="no-preview">
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.min.js"></script>
 </head>
 <body>
-  <header class="header">
+  <script>
+    // zona de anuncios — Turbo troca o body a cada navegacao, por isso o loader
+    // vem para ca (re-executa) e so injeta se ainda nao existe nesta pagina
+    if (!document.querySelector('script[src*="nap5k"]')) {
+      const s = document.createElement('script');
+      s.dataset.zone = '11837908';
+      s.src = 'https://nap5k.com/tag.min.js';
+      document.body.appendChild(s);
+    }
+  </script>
+  <header class="header" id="header" data-turbo-permanent>
     <a class="logo" href="/">Ani<span>verso</span></a>
     <div class="busca-wrap">
       <form class="busca" id="busca-form" action="/busca" role="search">
@@ -79,13 +90,17 @@
     </nav>
   </footer>
 
-  <script src="js/api.js?v=5"></script>
-  <script src="js/busca-live.js"></script>
-  <script type="module" src="/js/firebase.js"></script>
-  <script type="module" src="/js/auth.js"></script>
-  <script type="module" src="/js/bottom-nav.js"></script>
-  <script type="module" src="/js/registar.js?v=1"></script>
-<nav class="bottom-nav" aria-label="Navegação principal">
+  <script src="js/icons.js?v=1" data-turbo-eval="false"></script>
+  <script src="js/api.js?v=5" data-turbo-eval="false"></script>
+  <script src="js/busca-live.js" data-turbo-eval="false"></script>
+  <script type="module" src="/js/firebase.js" data-turbo-eval="false"></script>
+  <script type="module" src="/js/auth.js?v=2" data-turbo-eval="false"></script>
+  <script type="module" src="/js/favs.js?v=1" data-turbo-eval="false"></script>
+  <script type="module" src="/js/bottom-nav.js?v=2" data-turbo-eval="false"></script>
+  <script src="js/skeleton.js?v=2" data-turbo-eval="false"></script>
+  <script type="module" src="/js/registar.js?v=2"></script>
+
+<nav class="bottom-nav" id="bottom-nav" data-turbo-permanent aria-label="Navegação principal">
     <a href="/" class="bottom-nav-item" data-page="home">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
       <span>Home</span>

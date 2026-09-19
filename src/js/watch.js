@@ -1,3 +1,4 @@
+(function () {
 const WATCH_ASSISTIDOS_PREFIXO = 'aniverso_assistidos_';
 const WATCH_TEXTO_INDISPONIVEL = 'Episódio não disponível';
 const WATCH_TEXTO_SEM_EPS = 'Nenhum episódio disponível';
@@ -526,13 +527,22 @@ function irParaEpisodio(indice, { empurrar = true } = {}) {
   if (indice === indiceAtual && embedUrlAtual) return;
 
   const ep = episodiosVivos[indice];
+  marcarAssistido(animeAtual.slug, ep.numero);
+
+  // com Turbo: navega para a URL do episódio — histórico fica consistente
+  // (back/forward funciona) e a página re-renderiza com o episódio certo.
+  // sem Turbo: comportamento original in-place com pushState.
+  if (empurrar && window.Turbo) {
+    (window.irPara || ((u) => location.href = u))(hrefWatch(animeAtual.slug, ep.numero));
+    return;
+  }
+
   indiceAtual = indice;
 
   pintarCabecalho();
   renderEpisodios();
   ligarNavegacao();
   atualizarTitulo();
-  marcarAssistido(animeAtual.slug, ep.numero);
 
   if (empurrar) history.pushState(null, '', hrefWatch(animeAtual.slug, ep.numero));
 
@@ -569,18 +579,8 @@ function ligarBotoesNavegacao() {
   });
 }
 
-window.addEventListener('popstate', () => {
-  if (!animeAtual) return;
-  const params = new URLSearchParams(window.location.search);
-  const slug = params.get('slug');
-  if (slug && slug !== animeAtual.slug) {
-    window.location = hrefWatch(slug, params.get('ep') ?? '');
-    return;
-  }
-  const ep = params.has('ep') ? Number(params.get('ep')) : null;
-  const idx = ep ? episodiosVivos.findIndex(e => Number(e.numero) === ep) : 0;
-  if (idx >= 0) irParaEpisodio(idx, { empurrar: false });
-});
+// popstate removido: o Turbo detém o histórico e restaura a página do cache;
+// carregarWatch volta a ler o episódio da URL ao re-renderizar.
 
 function preloadHover() {
   document.getElementById('eps')?.addEventListener('mouseover', async (e) => {
@@ -629,8 +629,13 @@ function setupFullscreen() {
     btn.classList.toggle('ativo', ativo);
   };
 
-  document.addEventListener('fullscreenchange', sincronizar);
-  document.addEventListener('webkitfullscreenchange', sincronizar);
+  // nos elementos do player (novos a cada visita) em vez de document:
+  // nao acumula listeners e cobre fullscreen no video ou no stage
+  [video, stage].forEach((el) => {
+    if (!el) return;
+    el.addEventListener('fullscreenchange', sincronizar);
+    el.addEventListener('webkitfullscreenchange', sincronizar);
+  });
 }
 
 async function carregarWatch() {
@@ -643,12 +648,12 @@ async function carregarWatch() {
     const usuario = await window.requireAuth();
     if (!usuario) return;
   } else {
-    location.href = `/entrar?next=${encodeURIComponent(location.pathname + location.search)}`;
+    (window.irPara || ((u) => location.href = u))(`/entrar?next=${encodeURIComponent(location.pathname + location.search)}`);
     return;
   }
 
   if (!slug) {
-    window.location = '/404';
+    (window.irPara || ((u) => location.href = u))('/404');
     return;
   }
 
@@ -661,7 +666,7 @@ async function carregarWatch() {
 
   const anime = await AniversoAPI.lite(slug);
   if (!anime) {
-    window.location = '/404';
+    (window.irPara || ((u) => location.href = u))('/404');
     return;
   }
 
@@ -703,4 +708,9 @@ async function carregarWatch() {
   marcarAssistido(anime.slug, alvo.numero);
 }
 
-document.addEventListener('DOMContentLoaded', carregarWatch);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', carregarWatch);
+} else {
+  carregarWatch();
+}
+})();

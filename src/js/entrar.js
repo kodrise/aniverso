@@ -5,37 +5,12 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-const form = document.getElementById("form-entrar");
-const erroEl = document.getElementById("erro");
-const loadingEl = document.getElementById("loading");
-const googleBtn = document.getElementById("google");
+import { registrarInit } from "./turbo-init.js";
+import { irPara } from "./auth.js";
 
 function proximoDestino() {
   const params = new URLSearchParams(location.search);
   return params.get("next") || "/";
-}
-
-function mostrarErro(mensagem) {
-  if (!erroEl) return;
-  erroEl.textContent = mensagem;
-  erroEl.hidden = false;
-}
-
-function esconderErro() {
-  if (erroEl) erroEl.hidden = true;
-}
-
-function iniciarLoading() {
-  if (loadingEl) loadingEl.hidden = false;
-  if (googleBtn) googleBtn.disabled = true;
-  if (form) form.querySelector("button[type=submit]").disabled = true;
-}
-
-function pararLoading() {
-  if (loadingEl) loadingEl.hidden = true;
-  if (googleBtn) googleBtn.disabled = false;
-  if (form) form.querySelector("button[type=submit]").disabled = false;
 }
 
 function mapearErro(erro) {
@@ -54,49 +29,84 @@ function mapearErro(erro) {
   return mapas[codigo] || "Algo deu errado. Tente novamente.";
 }
 
-if (form) {
-  form.addEventListener("submit", async (evento) => {
-    evento.preventDefault();
-    esconderErro();
+function ligarFormulario() {
+  const form = document.getElementById("form-entrar");
+  const erroEl = document.getElementById("erro");
+  const loadingEl = document.getElementById("loading");
+  const googleBtn = document.getElementById("google");
 
-    const email = form.email.value.trim();
-    const senha = form.senha.value;
+  // so' segue se estivermos na pagina de entrar (o modulo persiste entre paginas)
+  if (!form) return;
 
-    if (!email || !senha) {
-      mostrarErro("Preencha email e senha.");
-      return;
-    }
-
-    iniciarLoading();
-    try {
-      await signInWithEmailAndPassword(auth, email, senha);
-      location.href = proximoDestino();
-    } catch (erro) {
-      pararLoading();
-      mostrarErro(mapearErro(erro));
-    }
+  // ja logado? manda direto (one-shot por visita)
+  const cancelarRedirecionamento = onAuthStateChanged(auth, (user) => {
+    cancelarRedirecionamento();
+    if (user) irPara(proximoDestino());
   });
-}
 
-if (googleBtn) {
-  googleBtn.addEventListener("click", async () => {
-    esconderErro();
-    iniciarLoading();
-    try {
-      const provedor = new GoogleAuthProvider();
-      await signInWithPopup(auth, provedor);
-      location.href = proximoDestino();
-    } catch (erro) {
-      pararLoading();
-      // o utilizador fechar o popup nao e' erro
-      if (erro?.code !== "auth/popup-closed-by-user") {
+  function mostrarErro(mensagem) {
+    if (!erroEl) return;
+    erroEl.textContent = mensagem;
+    erroEl.hidden = false;
+  }
+
+  function esconderErro() {
+    if (erroEl) erroEl.hidden = true;
+  }
+
+  function iniciarLoading() {
+    if (loadingEl) loadingEl.hidden = false;
+    if (googleBtn) googleBtn.disabled = true;
+    if (form) form.querySelector("button[type=submit]").disabled = true;
+  }
+
+  function pararLoading() {
+    if (loadingEl) loadingEl.hidden = true;
+    if (googleBtn) googleBtn.disabled = false;
+    if (form) form.querySelector("button[type=submit]").disabled = false;
+  }
+
+  if (form) {
+    form.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      esconderErro();
+
+      const email = form.email.value.trim();
+      const senha = form.senha.value;
+
+      if (!email || !senha) {
+        mostrarErro("Preencha email e senha.");
+        return;
+      }
+
+      iniciarLoading();
+      try {
+        await signInWithEmailAndPassword(auth, email, senha);
+        irPara(proximoDestino());
+      } catch (erro) {
+        pararLoading();
         mostrarErro(mapearErro(erro));
       }
-    }
-  });
+    });
+  }
+
+  if (googleBtn) {
+    googleBtn.addEventListener("click", async () => {
+      esconderErro();
+      iniciarLoading();
+      try {
+        const provedor = new GoogleAuthProvider();
+        await signInWithPopup(auth, provedor);
+        irPara(proximoDestino());
+      } catch (erro) {
+        pararLoading();
+        // o utilizador fechar o popup nao e' erro
+        if (erro?.code !== "auth/popup-closed-by-user") {
+          mostrarErro(mapearErro(erro));
+        }
+      }
+    });
+  }
 }
 
-// ja logado? manda direto
-onAuthStateChanged(auth, (user) => {
-  if (user) location.href = proximoDestino();
-});
+registrarInit(ligarFormulario);

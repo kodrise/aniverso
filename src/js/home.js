@@ -1,3 +1,4 @@
+(function () {
 const HOME_TEXTO_ERRO = 'Não foi possível carregar';
 const HOME_TEXTO_VAZIO = 'Nenhum anime encontrado';
 const HOME_CACHE_PREFIXO = 'home_';
@@ -310,15 +311,24 @@ function ligarInteracaoHero(hero) {
     reiniciarHeroTimer();
   });
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
+  // visibilitychange e' no document: regista-se UMA vez (o script re-executa em
+  // cada visita a /) e delega para o controlo do hero da visita atual
+  window.__heroControle = (hidden) => {
+    if (!document.getElementById('hero')) return;
+    if (hidden) {
       pararProgressoHero();
       clearInterval(heroTimer);
       heroTimer = null;
     } else if (!heroEmHover) {
       reiniciarHeroTimer();
     }
-  });
+  };
+  if (!window.__heroVisibility) {
+    window.__heroVisibility = true;
+    document.addEventListener('visibilitychange', () => {
+      if (typeof window.__heroControle === 'function') window.__heroControle(document.hidden);
+    });
+  }
 }
 
 function ligarSwipeHero(hero) {
@@ -580,13 +590,20 @@ function ligarBusca() {
     const valor = campo.value.trim();
     if (!valor) return;
 
-    window.location = `/busca?q=${encodeURIComponent(valor)}`;
+    (window.irPara || ((u) => location.href = u))(`/busca?q=${encodeURIComponent(valor)}`);
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function iniciarHome() {
   Skeleton.pintarPagina();
   ligarBusca();
   ligarRailNav();
   carregarHome();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', iniciarHome);
+} else {
+  iniciarHome();
+}
+})();

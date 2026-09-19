@@ -66,7 +66,7 @@ function montarHeader(user) {
     } catch (erro) {
       console.error("[Aniverso] erro ao sair", erro);
     }
-    location.reload();
+    irPara("/");
   });
 }
 
@@ -123,14 +123,25 @@ export function requireAuth() {
         resolve(user);
       } else {
         const next = encodeURIComponent(location.pathname + location.search);
-        location.href = `/entrar?next=${next}`;
+        irPara(`/entrar?next=${next}`);
       }
     });
   });
 }
 
+// navegacao Turbo quando disponivel (mantem header/nav permanentes);
+// recorre ao reload completo em ambientes sem Turbo
+export function irPara(url) {
+  if (window.Turbo?.visit) {
+    window.Turbo.visit(url);
+  } else {
+    location.href = url;
+  }
+}
+
 // exposto para scripts clássicos (anime.js, watch.js) que não são módulos ES
 window.requireAuth = requireAuth;
+window.irPara = irPara;
 
 // auto-executa na carga de qualquer página que inclua este módulo
 if (document.readyState === "loading") {

@@ -1,4 +1,5 @@
 import { lerTodos, sincronizar } from "./history.js";
+import { registrarInit } from "./turbo-init.js";
 
 function escapar(valor) {
   return String(valor ?? "")
@@ -73,4 +74,4 @@ async function carregarHistorico() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", carregarHistorico);
+registrarInit(carregarHistorico);

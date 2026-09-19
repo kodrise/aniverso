@@ -20,10 +20,13 @@ function marcarAtiva() {
   });
 }
 
-if (document.readyState === "loading") {
+// este modulo so avalia uma vez (module map): a nav e' data-turbo-permanent,
+// por isso os listeners persistem; turbo:load (disparado tambem na carga fria)
+// e' o sinal para re-marcar a aba ativa a cada navegacao
+if (!window.__navTurbo) {
+  window.__navTurbo = true;
   document.addEventListener("DOMContentLoaded", marcarAtiva);
-} else {
-  marcarAtiva();
+  document.addEventListener("turbo:load", marcarAtiva);
 }
 
 // prefetch dos links da nav ao hover/toque (>100ms) — navegação quase instantânea;

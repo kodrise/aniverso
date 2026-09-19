@@ -1,3 +1,4 @@
+(function () {
 const CATALOGO_TEXTO_VAZIO = 'Nenhum anime encontrado';
 const CATALOGO_TEXTO_ERRO = 'Não foi possível carregar';
 const CATALOGO_POR_PAGINA = 40;
@@ -231,11 +232,16 @@ function ligarPaginacao() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function iniciarCatalogo() {
   popularSelects();
   ligarFiltros();
   ligarPaginacao();
   carregarCatalogo();
+}
 
-  window.addEventListener('popstate', carregarCatalogo);
-});
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', iniciarCatalogo);
+} else {
+  iniciarCatalogo();
+}
+})();
