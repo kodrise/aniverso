@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d0d0f">
-  <title>Favoritos — Aniverso</title>
+  <title>Histórico — Aniverso</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://streamapi-peach.vercel.app">
@@ -26,8 +26,8 @@
   </header>
 
   <main class="container">
-    <h1 class="page-title">Favoritos</h1>
-    <div class="grid" id="grid-favoritos"></div>
+    <h1 class="page-title">Histórico</h1>
+    <div class="grid" id="grid-historico"></div>
   </main>
 
   <footer class="footer">
@@ -39,15 +39,7 @@
     </nav>
   </footer>
 
-  <script src="js/api.js?v=5"></script>
-  <script src="js/busca-live.js"></script>
-  <script type="module" src="/js/firebase.js"></script>
-  <script type="module" src="/js/auth.js"></script>
-  <script type="module" src="/js/favs.js"></script>
-  <script type="module" src="/js/bottom-nav.js"></script>
-  <script src="js/skeleton.js?v=2"></script>
-  <script type="module" src="/js/favoritos.js?v=1"></script>
-<nav class="bottom-nav" aria-label="Navegação principal">
+  <nav class="bottom-nav" aria-label="Navegação principal">
     <a href="/" class="bottom-nav-item" data-page="home">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
       <span>Home</span>
@@ -65,5 +57,13 @@
       <span>Perfil</span>
     </a>
   </nav>
+
+  <script src="js/api.js?v=5"></script>
+  <script src="js/busca-live.js"></script>
+  <script type="module" src="/js/firebase.js"></script>
+  <script type="module" src="/js/auth.js"></script>
+  <script type="module" src="/js/bottom-nav.js"></script>
+  <script src="js/skeleton.js?v=2"></script>
+  <script type="module" src="/js/historico.js?v=1"></script>
 </body>
 </html>

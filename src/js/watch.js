@@ -144,6 +144,17 @@ function marcarAssistido(slug, numero) {
   } catch (erro) {
     console.error('[Aniverso] não consegui salvar o episódio assistido', erro);
   }
+
+  // meta para sync futuro (mesmo deslogado)
+  if (animeAtual) window.Historico?.cacheMeta?.(animeAtual);
+
+  // se logado, espelha no Firestore; falhas não quebram o fluxo
+  // (auth ainda a carregar = undefined; o sync do login pega o restante)
+  if (window.__user) {
+    window.Historico?.escrever?.(animeAtual, numero)?.catch?.((erro) => {
+      console.error('[Aniverso] não consegui sincronizar o episódio assistido', erro);
+    });
+  }
 }
 
 function getPrimeiroVivo(episodios) {

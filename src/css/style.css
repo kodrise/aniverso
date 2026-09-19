@@ -2854,8 +2854,14 @@ svg.ico[stroke] {
 .perfil-email {
   color: var(--muted);
   font-size: 14px;
-  margin-bottom: 22px;
+  margin-bottom: 8px;
   word-break: break-word;
+}
+
+.perfil-contagem {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 18px;
 }
 
 .perfil-acoes {
@@ -2890,4 +2896,42 @@ svg.ico[stroke] {
 
 .btn-perfil.sair {
   color: var(--muted);
+}
+
+/* ===== Fase 3: página de histórico ===== */
+.hist-card .card-thumb {
+  position: relative;
+}
+
+.hist-pill {
+  position: absolute;
+  left: 8px;
+  bottom: 10px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(13, 13, 15, 0.82);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.hist-barra {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  display: block;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.hist-barra > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.35s var(--ease);
 }

@@ -1,5 +1,6 @@
 import { auth } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { sincronizar } from "./history.js";
 
 function inicial(nome) {
   if (!nome) return "";
@@ -83,6 +84,10 @@ export function initAuthHeader() {
     if (resolverAuth) {
       resolverAuth(user ?? null);
       resolverAuth = null;
+    }
+    // logado: funde o histórico local com a nuvem (best-effort)
+    if (user) {
+      sincronizar().catch((erro) => console.error("[Aniverso] sync do histórico falhou", erro));
     }
     montarHeader(user);
   });

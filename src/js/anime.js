@@ -167,7 +167,7 @@ function montarCTAs(anime) {
   ctas.innerHTML = `
     <a class="btn-assistir" href="${hrefWatch(anime.slug, primeiro.numero)}">
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5 19 12 7 19.5Z"/></svg>
-      Assistir Ep ${escapar(String(primeiro.numero))}
+      <span class="btn-assistir-txt">Assistir Ep ${escapar(String(primeiro.numero))}</span>
     </a>
     <button type="button" class="btn-fav" id="btn-fav" aria-label="Favoritar">
       <svg class="ico coracao-vazio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
@@ -181,6 +181,45 @@ function montarCTAs(anime) {
     </button>`;
 
   ligarBotaoFav(anime);
+  ajustarCTAContinuar(anime);
+}
+
+// se o user logado já tem histórico deste anime, o botão vira "Continuar Ep N"
+// (ou "Reassistir Ep 1" quando está no último episódio disponível)
+async function ajustarCTAContinuar(anime) {
+  const user = await (window.authPronto ?? Promise.resolve(null));
+  if (!user || !window.Historico || !anime.id) return;
+
+  let historico;
+  try {
+    historico = await window.Historico.lerUm(anime.id);
+  } catch (erro) {
+    console.error('[Aniverso] não consegui ler o histórico do anime', erro);
+    return;
+  }
+
+  if (!historico || !historico.ultimo_ep) return;
+
+  const eps = anime.episodios ?? [];
+  const vivos = eps.filter((ep) => ep.status !== 'dead');
+  const lista = vivos.length ? vivos : eps;
+  const alvo = lista.find((ep) => Number(ep.numero) === Number(historico.ultimo_ep));
+  if (!alvo) return; // o ep guardado não está mais disponível — mantém o padrão
+
+  const botao = document.querySelector('.btn-assistir');
+  const rotulo = botao?.querySelector('.btn-assistir-txt');
+  if (!botao || !rotulo) return;
+
+  const noFinal = lista.at(-1) && Number(alvo.numero) === Number(lista.at(-1).numero);
+
+  if (noFinal) {
+    const primeiro = lista[0];
+    rotulo.textContent = `Reassistir Ep ${primeiro.numero}`;
+    botao.href = hrefWatch(anime.slug, primeiro.numero);
+  } else {
+    rotulo.textContent = `Continuar Ep ${alvo.numero}`;
+    botao.href = hrefWatch(anime.slug, alvo.numero);
+  }
 }
 
 async function ligarBotaoFav(anime) {
@@ -267,6 +306,9 @@ function renderDetalhe(anime) {
   } else {
     sinopse.hidden = true;
   }
+
+  // meta para o histórico sincronizar a capa/total (o /lite não os traz)
+  window.Historico?.cacheMeta?.(anime);
 
   montarCTAs(anime);
 }

@@ -36,6 +36,7 @@
     { "source": "/registar", "destination": "/pages/registar" },
     { "source": "/favoritos", "destination": "/pages/favoritos" },
     { "source": "/perfil", "destination": "/pages/perfil" },
+    { "source": "/historico", "destination": "/pages/historico" },
     { "source": "/404", "destination": "/pages/404" }
   ]
 }
